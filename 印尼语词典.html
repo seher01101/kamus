@@ -131,18 +131,18 @@ mark{background:var(--hl);color:inherit;border-radius:4px;padding:0 2px}
 @media (max-width:480px){.hw{font-size:23px}.freq{margin-left:0;width:100%}.entry{padding:14px 15px}}
 
 body::before{background:
-  radial-gradient(900px 720px at -5% -8%,rgba(91,141,255,.20),transparent 62%),
-  radial-gradient(900px 720px at 105% 4%,rgba(155,108,255,.18),transparent 62%),
-  radial-gradient(1000px 800px at 50% 115%,rgba(122,132,255,.13),transparent 66%),
-  linear-gradient(160deg,rgba(91,141,255,.05),rgba(155,108,255,.06))!important}
+  radial-gradient(900px 720px at -5% -8%,rgba(91,141,255,.10),transparent 62%),
+  radial-gradient(900px 720px at 105% 4%,rgba(155,108,255,.09),transparent 62%),
+  radial-gradient(1000px 800px at 50% 115%,rgba(122,132,255,.06),transparent 66%),
+  linear-gradient(160deg,rgba(91,141,255,.02),rgba(155,108,255,.03))!important}
 :root{--glass:color-mix(in srgb,var(--surface) 52%,transparent)!important;--glass-border:rgba(255,255,255,.65)!important;
   --glass-hi:rgba(255,255,255,.75)!important;--shadow:0 1px 2px rgba(40,50,120,.05),0 10px 30px rgba(60,70,160,.08)!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--glass:color-mix(in srgb,var(--surface) 50%,transparent)!important;--glass-border:rgba(255,255,255,.10)!important;--glass-hi:rgba(255,255,255,.08)!important;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35)!important}
-  body::before{background:radial-gradient(900px 720px at -5% -8%,rgba(70,110,255,.22),transparent 62%),radial-gradient(900px 720px at 105% 4%,rgba(140,90,255,.20),transparent 62%),radial-gradient(1000px 800px at 50% 115%,rgba(100,110,255,.14),transparent 66%)!important}}
+  body::before{background:radial-gradient(900px 720px at -5% -8%,rgba(70,110,255,.12),transparent 62%),radial-gradient(900px 720px at 105% 4%,rgba(140,90,255,.11),transparent 62%),radial-gradient(1000px 800px at 50% 115%,rgba(100,110,255,.07),transparent 66%)!important}}
 :root[data-theme="dark"]{--glass:color-mix(in srgb,var(--surface) 50%,transparent)!important;--glass-border:rgba(255,255,255,.10)!important;--glass-hi:rgba(255,255,255,.08)!important}
 .glass,.bar,.entry,.panel{backdrop-filter:blur(40px) saturate(200%)!important;-webkit-backdrop-filter:blur(40px) saturate(200%)!important}
 .nav{background:color-mix(in srgb,var(--surface) 55%,transparent)!important;backdrop-filter:blur(40px) saturate(200%)!important;-webkit-backdrop-filter:blur(40px) saturate(200%)!important;border-color:var(--glass-border)!important}
-.hero{background:linear-gradient(145deg,rgba(120,140,255,.14),rgba(160,120,255,.10) 55%,var(--glass))!important}
+.hero{background:var(--glass)!important}
 </style>
 
 <nav class="nav" aria-label="主导航"><div class="nb">印尼语学习<small>Belajar Bahasa</small></div><div class="lbl">练习 · 测试</div><a class="p" href="index.html#today" data-nav="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M8.5 15l2 2 4-4"/></svg><span>今日</span></a><a class="p" href="index.html#words" data-nav="words"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="16" rx="2.5"/><path d="M8 2h10.5A2.5 2.5 0 0 1 21 4.5V17"/><path d="M7 11h5M7 15h3"/></svg><span>背词</span></a><a class="p" href="index.html#dict" data-nav="dict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h12"/><path d="M5 16l4-11 4 11M6.5 12h5"/><path d="M15 9h5M17.5 9v8a2 2 0 0 0 2 2"/></svg><span>听写</span></a><div class="sep" aria-hidden="true"></div><div class="lbl">学习 · 输入</div><a class="l" href="listen.html" data-nav="listen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>听力</span></a><a class="l on" href="dict.html" data-nav="kamus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><circle cx="12" cy="10" r="3"/><path d="M14.2 12.2 16 14"/></svg><span>词典</span></a></nav>
