@@ -147,6 +147,59 @@ textarea.din{min-height:96px;font-size:19px;resize:vertical}
 .center{text-align:center}
 .big{font-family:var(--font-display);font-size:48px;font-weight:700;color:var(--prac)}
 .empty{color:var(--muted);text-align:center;padding:30px 10px}
+.thead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+.date{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--prac);text-transform:uppercase}
+.greet{font-size:34px;margin:2px 0 0;line-height:1.1}
+.tools{display:flex;align-items:center;gap:8px}
+.gear{width:38px;height:38px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--ink-soft);display:grid;place-items:center;cursor:pointer}
+.gear svg{width:19px;height:19px}
+.hero{border-radius:28px;padding:22px;margin-top:16px;display:grid;grid-template-columns:auto 1fr;gap:6px 24px;align-items:center;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--prac-soft) 85%,transparent),var(--glass) 60%)}
+.rwrap{position:relative;width:132px;height:132px}
+.ring{width:132px;height:132px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:11}
+.ring .rt{stroke:color-mix(in srgb,var(--prac) 14%,transparent)}
+.ring .rp{stroke:var(--prac);stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
+.rtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.rtxt b{font-family:var(--font-display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.rtxt b small{font-size:16px;color:var(--muted)}
+.rtxt span{font-size:11.5px;color:var(--muted);margin-top:3px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.steps li{display:flex;align-items:center;gap:11px;padding:6px 8px;border-radius:12px}
+.steps li.cur{background:color-mix(in srgb,var(--surface) 70%,transparent)}
+.steps .num{width:26px;height:26px;border-radius:99px;display:grid;place-items:center;font-size:12.5px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--prac) 35%,transparent);color:var(--prac);flex-shrink:0}
+.steps li.done .num{background:var(--prac);border-color:var(--prac);color:#fff}
+.steps li.done b{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+.steps b{display:block;font-family:var(--cjk);font-size:15px;line-height:1.3}
+.steps small{color:var(--muted);font-size:12px}
+.btn.go{grid-column:1 / -1;justify-self:stretch;width:100%;margin-top:12px;font-size:16.5px;padding:15px}
+.steps li.skip{opacity:.55}
+.steps li.skip .num{border-style:dashed}
+.week{border-radius:22px;padding:16px 18px;margin-top:12px}
+.wh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.wh b{font-family:var(--cjk);font-size:15.5px}
+.wh span{font-size:12.5px;color:var(--muted)}
+.wds{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)}
+.wd i{font-style:normal;width:34px;height:34px;border-radius:99px;display:grid;place-items:center;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--surface-2) 60%,transparent);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.wd.on i{background:var(--prac);color:#fff}
+.wd.now i{box-shadow:0 0 0 2px var(--surface),0 0 0 4px color-mix(in srgb,var(--prac) 45%,transparent)}
+.foot{margin-top:14px;text-align:center}
+.inter{display:block;padding:34px 22px}
+.okc{width:64px;height:64px;border-radius:99px;margin:0 auto 6px;background:var(--prac);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:700;box-shadow:0 8px 22px color-mix(in srgb,var(--prac) 35%,transparent)}
+.finish{display:block;padding:30px 22px}
+.finish .ring{margin:0 auto;display:block}
+.bigt{font-family:var(--font-display);font-size:40px;font-weight:700;color:var(--prac);margin-top:6px}
+#sheet{position:fixed;inset:0;z-index:50}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);backdrop-filter:blur(2px)}
+.panel{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;border-radius:26px 26px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom,0px));background:var(--surface);max-height:88vh;overflow:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@media (min-width:900px){.panel{bottom:auto;top:50%;transform:translateY(-50%);border-radius:26px;animation:none}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 6px}
+.panel .chips button:not([aria-pressed]){font-weight:500}
+@media (max-width:520px){.hero{grid-template-columns:1fr;justify-items:center;padding:20px 16px}.steps{width:100%}.greet{font-size:30px}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}.ring .rp{transition:none}}
+
 @media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.modes{grid-template-columns:1fr}.word{font-size:34px}}
 </style>
 
@@ -181,7 +234,7 @@ const mastered = () => book().filter(k => S.w[k] && S.w[k].box >= 5).length;
 function streak() {
   let n = 0; const d = new Date();
   for (;;) { const k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const x = S.days[k]; if (x && (x.nw + x.rv + x.dt) > 0) { n++; d.setDate(d.getDate() - 1); } else break; }
+    const x = S.days[k]; if (x && (x.nw + x.rv + x.dt + (x.ds || 0)) > 0) { n++; d.setDate(d.getDate() - 1); } else break; }
   return n;
 }
 function grade(k, ok) {
@@ -197,7 +250,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 function route() {
   const h = (location.hash || "#today").slice(1);
   document.querySelectorAll(".nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === (h.split("/")[0] === "words" ? "words" : h.split("/")[0] === "dict" ? "dict" : h === "today" ? "today" : "")));
-  au.pause(); au.onended = null;
+  au.pause(); au.onended = null; FLOW = false;
   if (h.startsWith("words")) return wordsHome();
   if (h === "dict/word") return dictWord();
   if (h === "dict/sent") return dictSent();
@@ -208,51 +261,129 @@ function route() {
 window.addEventListener("hashchange", route);
 const bookSeg = () => `<div class="seg" role="group" aria-label="词书"><button type="button" data-book="1" aria-pressed="${S.book === "1"}">一级</button><button type="button" data-book="2" aria-pressed="${S.book === "2"}">二级</button></div>`;
 
-// ---------------- today
+// ---------------- today (guided daily flow)
+let FLOW = false;
+const DS_GOAL = 5;
+function greet() {
+  const h = new Date().getHours();
+  return h < 11 ? ["Selamat pagi", "早上好"] : h < 15 ? ["Selamat siang", "中午好"] : h < 19 ? ["Selamat sore", "下午好"] : ["Selamat malam", "晚上好"];
+}
+function plan() {
+  const d = day(); d.nk = d.nk || []; d.ds = d.ds || 0; d.dw = d.dw || 0; d.rv0 = d.rv0 ?? dueList().length;
+  const due = dueList().length;
+  const dwGoal = Math.min(S.dictPerDay, Math.max(5, d.nk.length || S.newPerDay));
+  return [
+    { k: "rev", t: "复习到期的词", done: due === 0, skip: !d.rv0 && !due, p: d.rv0 ? Math.min(1, d.rv / d.rv0) : (due ? 0 : 1),
+      sub: due ? `还有 ${due} 个` : d.rv ? `复习了 ${d.rv} 个` : "今天没有到期的词" },
+    { k: "new", t: "学新词", done: d.nw >= S.newPerDay, p: Math.min(1, d.nw / S.newPerDay), sub: `${Math.min(d.nw, S.newPerDay)} / ${S.newPerDay} 个 · 四选一` },
+    { k: "dw", t: "听写今天的词", done: d.dw >= dwGoal, p: Math.min(1, d.dw / dwGoal), sub: `${Math.min(d.dw, dwGoal)} / ${dwGoal} 个`, goal: dwGoal },
+    { k: "ds", t: "句子听写", done: d.ds >= DS_GOAL, p: Math.min(1, d.ds / DS_GOAL), sub: `${Math.min(d.ds, DS_GOAL)} / ${DS_GOAL} 句` },
+  ];
+}
+function weekStrip() {
+  const out = [], now = new Date(), names = "日一二三四五六";
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(now.getDate() - i);
+    const k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const x = S.days[k], on = x && (x.nw + x.rv + x.dt + (x.ds || 0)) > 0;
+    out.push(`<div class="wd ${on ? "on" : ""} ${i === 0 ? "now" : ""}"><span>${names[d.getDay()]}</span><i>${on ? "✓" : d.getDate()}</i></div>`);
+  }
+  return out.join("");
+}
+function ring(p) {
+  const r = 52, c = 2 * Math.PI * r;
+  return `<svg class="ring" viewBox="0 0 128 128" aria-hidden="true"><circle cx="64" cy="64" r="${r}" class="rt"/><circle cx="64" cy="64" r="${r}" class="rp" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}"/></svg>`;
+}
 function todayPage() {
-  const d = day(), b = book(), due = dueList().length, lr = learned().length;
-  const newLeft = Math.max(0, S.newPerDay - d.nw), dictLeft = Math.max(0, S.dictPerDay - d.dt);
-  const pct = Math.round(lr / b.length * 100);
+  const steps = plan(), [g1, g2] = greet(), b = book(), lr = learned().length;
+  const counted = steps.filter(s => !s.skip), p = counted.reduce((a, s) => a + s.p, 0) / counted.length;
+  const d0 = day(), started = d0.nw + d0.rv + (d0.dw || 0) + (d0.ds || 0) > 0;
+  const next = steps.find(s => !s.done);
+  const dt = new Date(), dstr = `${dt.getMonth() + 1} 月 ${dt.getDate()} 日 · 星期${"日一二三四五六"[dt.getDay()]}`;
   $("#app").innerHTML = `
-  <div class="top"><div><h1>今日</h1><p class="sub">${S.book === "1" ? "一级词书 · BIPA 1 + Daring + 武功秘籍" : "二级词书 · BIPA 2"}</p></div>${bookSeg()}</div>
-  <div class="stats">
-    <div class="stat glass"><b>${streak()}</b><span>连续天数</span></div>
-    <div class="stat glass"><b>${lr}</b><span>已学 / ${b.length}</span></div>
-    <div class="stat glass"><b>${mastered()}</b><span>已掌握</span></div>
-    <div class="stat glass"><b>${due}</b><span>待复习</span></div>
+  <div class="thead">
+    <div><div class="date">${dstr}</div><h1 class="greet">${g1}</h1><p class="sub">${g2}，${next ? "今天也学一点吧" : "今天的任务都完成了"}</p></div>
+    <div class="tools">${bookSeg()}<button class="gear" type="button" id="gear" aria-label="设置">${ICON.gear}</button></div>
   </div>
-  <div class="bar" title="词书进度 ${pct}%"><i style="width:${pct}%"></i></div>
-  <h2>今天要做的</h2>
-  <div class="tasks">
-    <a class="task glass ${newLeft + due === 0 ? "done" : ""}" href="#words"><span class="ic">${ICON.words}</span><span><b>背单词</b><small>新学 ${newLeft} 个 · 复习 ${due} 个 · 四选一</small></span><span class="go">${newLeft + due === 0 ? "✓ 完成" : "开始 ›"}</span></a>
-    <a class="task glass ${dictLeft === 0 ? "done" : ""}" href="#dict/word"><span class="ic">${ICON.ear}</span><span><b>单词听写</b><small>今天还剩 ${dictLeft} 个</small></span><span class="go">${dictLeft === 0 ? "✓ 完成" : "开始 ›"}</span></a>
-    <a class="task glass" href="#dict/sent"><span class="ic">${ICON.chat}</span><span><b>句子听写</b><small>听一句，写出印尼语</small></span><span class="go">开始 ›</span></a>
-    <a class="task glass" href="#dict/cloze"><span class="ic">${ICON.text}</span><span><b>阅读填词</b><small>看中文，填课文里的考点词</small></span><span class="go">开始 ›</span></a>
-  </div>
-  <h2>设置</h2>
-  <div class="set glass">
-    <div class="row"><label>每天新学单词</label><div class="chips" data-set="newPerDay">${[5, 10, 15, 20, 30, 50].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.newPerDay}">${n}</button>`).join("")}</div></div>
-    <div class="row"><label>每天听写单词</label><div class="chips" data-set="dictPerDay">${[5, 10, 15, 20, 30].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.dictPerDay}">${n}</button>`).join("")}</div></div>
-    <div class="row"><label>换手机 / 电脑时同步进度</label><span><button type="button" id="exp">导出进度</button> <button type="button" id="imp">导入进度</button></span></div>
-  </div>
-  <div id="sync"></div>
-  <p class="sub" style="margin-top:14px">进度只存在这台设备的浏览器里。换设备时：旧设备点「导出进度」复制进度码，新设备点「导入进度」粘贴。</p>`;
-  document.querySelectorAll(".chips button").forEach(b => b.onclick = () => { S[b.parentElement.dataset.set] = +b.dataset.v; save(); todayPage(); });
+  <section class="hero glass">
+    <div class="rwrap">${ring(p)}<div class="rtxt"><b>${Math.round(p * 100)}<small>%</small></b><span>今日进度</span></div></div>
+    <ol class="steps">${steps.map((s, i) => `<li class="${s.skip ? "skip" : s.done ? "done" : next && s.k === next.k ? "cur" : ""}"><span class="num">${s.skip ? "–" : s.done ? "✓" : i + 1}</span><span class="st"><b>${s.t}</b><small>${s.sub}</small></span></li>`).join("")}</ol>
+    <button class="btn go" type="button" id="goBtn">${next ? (started ? "继续：" + next.t : "开始今天的学习") : "今天完成了 · 再学一组新词"}</button>
+  </section>
+  <section class="week glass"><div class="wh"><b>连续学习 ${streak()} 天</b><span>已学 ${lr} / ${b.length} 词 · 已掌握 ${mastered()}</span></div><div class="wds">${weekStrip()}</div>
+    <div class="bar" title="词书进度"><i style="width:${Math.round(lr / b.length * 100)}%"></i></div></section>
+  <p class="sub foot">${S.book === "1" ? "一级词书：BIPA 1 + Daring + 武功秘籍" : "二级词书：BIPA 2"} · 做完还想练，点导航里的「背词」「听写」自由练习</p>
+  <div id="sheet" hidden></div>`;
+  $("#goBtn").onclick = () => next ? runStep(next.k) : (day().nw -= S.newPerDay, save(), runStep("new"));
+  $("#gear").onclick = openSheet;
+}
+function runStep(k) {
+  FLOW = k;
+  const d = day();
+  if (k === "rev") { Q = shuffle(dueList()).map(k => ({ k, isNew: false })); qi = 0; sessStat = { ok: 0, no: 0 }; return Q.length ? showWord() : flowNext(); }
+  if (k === "new") {
+    const n = Math.max(0, S.newPerDay - d.nw);
+    Q = shuffle(book().filter(x => !S.w[x])).slice(0, n).map(k => ({ k, isNew: true })); qi = 0; sessStat = { ok: 0, no: 0 };
+    return Q.length ? showWord() : flowNext();
+  }
+  if (k === "dw") {
+    const goal = plan()[2].goal, n = Math.max(1, goal - d.dw);
+    const pool = shuffle([...new Set(d.nk)]);
+    const extra = shuffle(learned().filter(x => !pool.includes(x)));
+    DQ = [...pool, ...extra].slice(0, n).map(k => ({ t: "w", k })); di = 0; dstat = { ok: 0, no: 0 };
+    return DQ.length ? dictStep() : flowNext();
+  }
+  if (k === "ds") {
+    const all = L.sents[S.book], unseen = all.filter(s => !S.sentSeen[s[2]]);
+    DQ = shuffle(unseen.length >= DS_GOAL ? unseen : all.slice()).slice(0, Math.max(1, DS_GOAL - d.ds)).map(s => ({ t: "s", s })); di = 0; dstat = { ok: 0, no: 0 };
+    return dictStep();
+  }
+}
+function flowNext() {
+  const steps = plan(), done = steps.find(s => s.k === FLOW), next = steps.find(s => !s.done);
+  if (!next) {
+    FLOW = false;
+    $("#app").innerHTML = `<section class="hero glass center finish">${ring(1)}<div class="fin"><div class="bigt">Hebat!</div><p>太棒了！今天的四项都完成了。</p><p class="sub">连续学习 <b>${streak()}</b> 天 · 今天学了 ${day().nw} 个新词、复习 ${day().rv} 个</p>
+      <div class="row2" style="justify-content:center"><a class="btn" href="#today" style="text-decoration:none">回到今日</a><a class="btn ghost" href="listen.html" style="text-decoration:none">去听力放松一下</a></div></div></section>`;
+    return;
+  }
+  $("#app").innerHTML = `<section class="hero glass center inter"><div class="okc">✓</div><h2>${done ? done.t + " 完成" : "这一步完成"}</h2>
+    <p class="sub">下一步：<b>${next.t}</b>（${next.sub}）</p>
+    <div class="row2" style="justify-content:center"><button class="btn" type="button" id="cont">继续 ›</button><a class="btn ghost" href="#today" style="text-decoration:none">先休息</a></div></section>`;
+  $("#cont").onclick = () => runStep(next.k);
+  $("#cont").focus();
+}
+function openSheet() {
+  const sh = $("#sheet"); sh.hidden = false;
+  sh.innerHTML = `<div class="scrim" data-close></div><div class="panel glass" role="dialog" aria-label="设置">
+    <div class="grab"></div><h2 style="margin-top:4px">设置</h2>
+    <div class="set">
+      <div class="row"><label>每天新学单词</label><div class="chips" data-set="newPerDay">${[5, 10, 15, 20, 30, 50].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.newPerDay}">${n}</button>`).join("")}</div></div>
+      <div class="row"><label>每天听写单词</label><div class="chips" data-set="dictPerDay">${[5, 10, 15, 20, 30].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.dictPerDay}">${n}</button>`).join("")}</div></div>
+      <div class="row"><label>换设备同步进度</label><span class="chips"><button type="button" id="exp">导出进度</button><button type="button" id="imp">导入进度</button></span></div>
+    </div>
+    <div id="sync"></div>
+    <p class="sub" style="margin-top:10px">进度只存在这台设备的浏览器里。换设备时，旧设备「导出进度」复制进度码，新设备「导入进度」粘贴。</p>
+    <div class="row2"><button class="btn" type="button" data-close>完成</button></div></div>`;
+  sh.querySelectorAll("[data-close]").forEach(x => x.onclick = () => { sh.hidden = true; todayPage(); });
+  sh.querySelectorAll(".chips[data-set] button").forEach(b => b.onclick = () => { S[b.parentElement.dataset.set] = +b.dataset.v; save(); b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
   $("#exp").onclick = () => {
     const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
     $("#sync").innerHTML = `<p class="sub" style="margin-top:12px">这是你的进度码，已尝试自动复制。没复制上的话，长按全选再复制：</p><textarea readonly id="code">${code}</textarea>`;
-    const ta = $("#code"); ta.select();
+    $("#code").select();
     try { navigator.clipboard.writeText(code).catch(() => {}); } catch (e) {}
   };
   $("#imp").onclick = () => {
     $("#sync").innerHTML = `<p class="sub" style="margin-top:12px">把另一台设备导出的进度码粘贴到这里（会覆盖这台设备的进度）：</p><textarea id="code"></textarea><div class="row2"><button class="btn" type="button" id="doimp">确认导入</button></div>`;
     $("#doimp").onclick = () => {
-      try { const x = JSON.parse(decodeURIComponent(escape(atob($("#code").value.trim())))); if (!x.w) throw 0; S = Object.assign(S, x); save(); todayPage(); }
+      try { const x = JSON.parse(decodeURIComponent(escape(atob($("#code").value.trim())))); if (!x.w) throw 0; S = Object.assign(S, x); save(); $("#sheet").hidden = true; todayPage(); }
       catch (e) { $("#sync").insertAdjacentHTML("beforeend", '<p class="sub" style="color:var(--bad)">进度码不对，请确认复制完整了。</p>'); }
     };
   };
 }
+
 const ICON = {
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
   words: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="13" height="16" rx="2.5"/><path d="M8 2h10.5A2.5 2.5 0 0 1 21 4.5V17"/></svg>',
   ear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8.5a6 6 0 1 1 12 0c0 3.5-3 4.5-3 7.5a3 3 0 0 1-5.5 1.7"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
@@ -311,7 +442,7 @@ function showWord() {
 function answer(it, ok) {
   const w = L.words[it.k];
   const first = !it.retry;
-  if (first) { grade(it.k, ok); if (it.isNew) day().nw++; else day().rv++; save(); }
+  if (first) { grade(it.k, ok); const d = day(); if (it.isNew) { d.nw++; (d.nk = d.nk || []).push(it.k); } else d.rv++; save(); }
   ok ? sessStat.ok++ : sessStat.no++;
   if (!ok) Q.push({ k: it.k, isNew: it.isNew, retry: true });
   $("#kill").remove();
@@ -322,6 +453,7 @@ function answer(it, ok) {
   $("#nx").focus();
 }
 function wordsDone() {
+  if (FLOW) return flowNext();
   $("#app").innerHTML = `<div class="top"><h1>背词</h1>${bookSeg()}</div><div class="card glass center"><div class="big">${sessStat.ok}/${sessStat.ok + sessStat.no}</div>
   <p>本轮答对 ${sessStat.ok} 次。答错的词会在近几天更早再出现。</p><div class="row2" style="justify-content:center"><a class="btn" href="#dict/word" style="text-decoration:none">去听写</a><a class="btn ghost" href="#today" style="text-decoration:none">回今日</a></div></div>`;
 }
@@ -377,6 +509,7 @@ function dictSent() {
 }
 function dictStep() {
   if (di >= DQ.length) {
+    if (FLOW) return flowNext();
     $("#app").innerHTML = `<div class="top"><h1>听写</h1>${bookSeg()}</div><div class="card glass center"><div class="big">${dstat.ok}/${DQ.length}</div><p>本轮完成。</p>
     <div class="row2" style="justify-content:center"><button class="btn" type="button" id="again">再来一轮</button><a class="btn ghost" href="#dict" style="text-decoration:none">换一种</a></div></div>`;
     $("#again").onclick = () => DQ[0] && DQ[0].t === "s" ? dictSent() : dictWord();
@@ -403,8 +536,8 @@ function dictStep() {
     const u = norm(inp.value), a = norm(ans);
     const ok = !give && u === a;
     ok ? dstat.ok++ : dstat.no++;
-    if (!isS) { day().dt++; if (!ok && S.w[it.k]) { S.w[it.k].box = Math.min(S.w[it.k].box, 1); S.w[it.k].due = addDays(1); } }
-    else S.sentSeen[it.s[2]] = 1;
+    if (!isS) { day().dt++; if (FLOW === "dw") day().dw = (day().dw || 0) + 1; if (!ok && S.w[it.k]) { S.w[it.k].box = Math.min(S.w[it.k].box, 1); S.w[it.k].due = addDays(1); } }
+    else { S.sentSeen[it.s[2]] = 1; day().ds = (day().ds || 0) + 1; }
     save();
     const zh = isS ? it.s[1] : L.words[it.k].m;
     $("#res").innerHTML = `<div class="res ${ok ? "ok" : "no"}"><div class="h">${ok ? "✓ 完全正确" : give ? "正确答案" : "✗ 有错"}</div>
