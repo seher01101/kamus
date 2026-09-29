@@ -3,6 +3,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>[hidden]{display:none!important}
+:root{--prac:#e2620f;--prac-soft:#fdeee2;--learn:#0071e3;--learn-soft:#e4f0fd;--navh:62px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--prac:#ff9147;--prac-soft:#3d2413;--learn:#0a84ff;--learn-soft:#0a2e4d}}
+:root[data-theme="dark"]{--prac:#ff9147;--prac-soft:#3d2413;--learn:#0a84ff;--learn-soft:#0a2e4d}
+body{padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:stretch;padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));
+  background:color-mix(in srgb,var(--surface) 80%,transparent);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border-top:1px solid var(--glass-border)}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11px;font-weight:500;color:var(--muted);text-decoration:none;border-radius:12px;padding:5px 0;min-height:52px}
+.nav a svg{width:23px;height:23px}
+.nav a.p.on{color:var(--prac)} .nav a.l.on{color:var(--learn)}
+.nav .sep{width:1px;background:var(--line);margin:10px 3px}
+.nav .lbl,.nav .nb{display:none}
+@media (min-width:900px){
+  body{padding-bottom:0;padding-left:210px}
+  .nav{top:0;right:auto;width:210px;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:3px;padding:22px 14px;border-top:0;border-right:1px solid var(--glass-border)}
+  .nav .nb{display:block;font-family:var(--font-display);font-weight:700;font-size:19px;margin:0 10px 10px}
+  .nav .nb small{display:block;font-family:var(--font-body);font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .nav .lbl{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;margin:16px 10px 4px}
+  .nav .sep{display:none}
+  .nav a{flex:none;flex-direction:row;justify-content:flex-start;gap:11px;font-size:14.5px;padding:9px 12px;min-height:0;color:var(--ink-soft)}
+  .nav a svg{width:20px;height:20px}
+  .nav a:hover{background:color-mix(in srgb,var(--surface-2) 60%,transparent)}
+  .nav a.p.on{background:var(--prac-soft)} .nav a.l.on{background:var(--learn-soft)}
+}
+.player{bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))!important;padding-bottom:8px!important}@media (min-width:900px){.player{left:210px!important;bottom:0!important;padding-bottom:12px!important}}
 :root{
   --ground:#f2f2f7; --surface:#ffffff; --surface-2:#e5e5ea;
   --ink:#1c1c1e; --ink-soft:#3a3a3c; --muted:#8e8e93; --line:#d1d1d6;
@@ -103,12 +127,13 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
+<nav class="nav" aria-label="主导航"><div class="nb">印尼语学习<small>Belajar Bahasa</small></div><div class="lbl">练习 · 测试</div><a class="p" href="index.html#today" data-nav="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M8.5 15l2 2 4-4"/></svg><span>今日</span></a><a class="p" href="index.html#words" data-nav="words"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="16" rx="2.5"/><path d="M8 2h10.5A2.5 2.5 0 0 1 21 4.5V17"/><path d="M7 11h5M7 15h3"/></svg><span>背词</span></a><a class="p" href="index.html#dict" data-nav="dict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h12"/><path d="M5 16l4-11 4 11M6.5 12h5"/><path d="M15 9h5M17.5 9v8a2 2 0 0 0 2 2"/></svg><span>听写</span></a><div class="sep" aria-hidden="true"></div><div class="lbl">学习 · 输入</div><a class="l on" href="listen.html" data-nav="listen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>听力</span></a><a class="l" href="dict.html" data-nav="kamus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><circle cx="12" cy="10" r="3"/><path d="M14.2 12.2 16 14"/></svg><span>词典</span></a></nav>
 <header>
   <div class="wrap">
     <div class="bar glass">
       <div class="brand">
         <h1>印尼语听力练习<small>Latihan Menyimak</small></h1>
-        <a href="index.html">查词典 →</a>
+        
       </div>
       <div class="seg" id="kinds" role="group" aria-label="类型">
         <button type="button" data-k="exam" aria-pressed="true">考官问答</button>
@@ -192,7 +217,7 @@ const au = $("#au");
 let cur = null, queue = [], qi = -1, playing = false, loop = false, timer = null;
 
 function wordLinks(t) {
-  return esc(t).replace(/[A-Za-z]+(?:-[A-Za-z]+)*/g, w => `<a href="index.html#${w.toLowerCase()}" target="_blank" rel="noopener">${w}</a>`);
+  return esc(t).replace(/[A-Za-z]+(?:-[A-Za-z]+)*/g, w => `<a href="dict.html#${w.toLowerCase()}" target="_blank" rel="noopener">${w}</a>`);
 }
 function lineHTML(l, k) {
   const spCls = l.role === "q" ? "q" : l.role === "a" ? "a" : "";
