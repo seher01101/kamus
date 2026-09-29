@@ -82,7 +82,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .set .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .set .row:last-child{border-bottom:0}
 .set label{font-family:var(--cjk);font-size:14.5px}
-.set select,.set button{font:inherit;font-size:14px;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 10px;cursor:pointer}
+.chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.chips button{font:inherit;font-size:13.5px;font-weight:600;min-width:38px;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink-soft);border-radius:99px;padding:4px 10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chips button[aria-pressed="true"]{background:var(--prac);border-color:var(--prac);color:#fff}
+.set .row{flex-wrap:wrap}
+.set > .row > span > button{font:inherit;font-size:14px;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 10px;cursor:pointer}
 textarea{width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--ink);min-height:80px}
 .btn{font:inherit;font-size:15.5px;font-weight:600;border:0;background:var(--prac);color:#fff;border-radius:14px;padding:12px 18px;cursor:pointer;box-shadow:0 4px 12px color-mix(in srgb,var(--prac) 30%,transparent)}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--glass-border);box-shadow:none}
@@ -227,14 +231,13 @@ function todayPage() {
   </div>
   <h2>设置</h2>
   <div class="set glass">
-    <div class="row"><label for="np">每天新学单词</label><select id="np">${[5, 10, 15, 20, 30, 50].map(n => `<option ${n === S.newPerDay ? "selected" : ""}>${n}</option>`).join("")}</select></div>
-    <div class="row"><label for="dp">每天听写单词</label><select id="dp">${[5, 10, 15, 20, 30].map(n => `<option ${n === S.dictPerDay ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div class="row"><label>每天新学单词</label><div class="chips" data-set="newPerDay">${[5, 10, 15, 20, 30, 50].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.newPerDay}">${n}</button>`).join("")}</div></div>
+    <div class="row"><label>每天听写单词</label><div class="chips" data-set="dictPerDay">${[5, 10, 15, 20, 30].map(n => `<button type="button" data-v="${n}" aria-pressed="${n === S.dictPerDay}">${n}</button>`).join("")}</div></div>
     <div class="row"><label>换手机 / 电脑时同步进度</label><span><button type="button" id="exp">导出进度</button> <button type="button" id="imp">导入进度</button></span></div>
   </div>
   <div id="sync"></div>
   <p class="sub" style="margin-top:14px">进度只存在这台设备的浏览器里。换设备时：旧设备点「导出进度」复制进度码，新设备点「导入进度」粘贴。</p>`;
-  $("#np").onchange = e => { S.newPerDay = +e.target.value; save(); todayPage(); };
-  $("#dp").onchange = e => { S.dictPerDay = +e.target.value; save(); todayPage(); };
+  document.querySelectorAll(".chips button").forEach(b => b.onclick = () => { S[b.parentElement.dataset.set] = +b.dataset.v; save(); todayPage(); });
   $("#exp").onclick = () => {
     const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
     $("#sync").innerHTML = `<p class="sub" style="margin-top:12px">这是你的进度码，已尝试自动复制。没复制上的话，长按全选再复制：</p><textarea readonly id="code">${code}</textarea>`;
@@ -262,7 +265,7 @@ function wordsHome() {
   const d = day();
   const due = shuffle(dueList());
   const newLeft = Math.max(0, S.newPerDay - d.nw);
-  const fresh = book().filter(k => !S.w[k]).slice(0, newLeft);
+  const fresh = shuffle(book().filter(k => !S.w[k])).slice(0, newLeft);
   Q = [...due.map(k => ({ k, isNew: false })), ...fresh.map(k => ({ k, isNew: true }))];
   qi = 0; sessStat = { ok: 0, no: 0 };
   if (!Q.length) {
@@ -361,7 +364,7 @@ let DQ = [], di = 0, dstat = { ok: 0, no: 0 };
 function dictWord() {
   const n = Math.max(S.dictPerDay - day().dt, 0) || S.dictPerDay;
   const lr = shuffle(learned().filter(k => !L.words[k].w.includes(" ")));
-  const pool = lr.length >= n ? lr : [...lr, ...book().filter(k => !S.w[k]).slice(0, n - lr.length)];
+  const pool = lr.length >= n ? lr : [...lr, ...shuffle(book().filter(k => !S.w[k])).slice(0, n - lr.length)];
   DQ = pool.slice(0, n).map(k => ({ t: "w", k })); di = 0; dstat = { ok: 0, no: 0 };
   dictStep();
 }

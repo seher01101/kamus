@@ -121,7 +121,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .player .main svg{width:22px;height:22px}
 .player .info{flex:1;min-width:0;font-size:12px;color:var(--muted);line-height:1.3}
 .player .info b{display:block;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cjk)}
-.player select{font:inherit;font-size:13px;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 6px}
+.player .spd{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer;min-width:56px}
 .player .ctl[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
 @media (max-width:480px){.player .info{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -161,9 +161,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
     <button class="ctl" id="next" type="button" aria-label="下一句"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
     <button class="ctl" id="loop" type="button" aria-pressed="false" aria-label="单句循环" title="单句循环"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/><text x="10" y="15" font-size="7" fill="currentColor" stroke="none">1</text></svg></button>
     <div class="info"><b id="nowTitle"></b><span id="nowPos"></span></div>
-    <select id="speed" aria-label="语速">
-      <option value="0.6">很慢</option><option value="0.72">慢</option><option value="0.85" selected>正常</option><option value="1">快</option>
-    </select>
+    <button class="spd" id="speed" type="button" aria-label="语速">正常</button>
   </div>
 </div>
 <audio id="au" preload="auto"></audio>
@@ -275,7 +273,7 @@ function playClip(i) {
   qi = i; const q = queue[i]; if (!q) return finish();
   mark(q.k); updPos();
   au.src = "audio/" + q.a + ".mp3";
-  au.playbackRate = +$("#speed").value;
+  au.playbackRate = SPEEDS[spI][0];
   au.play().catch(() => { playing = false; updPos(); });
 }
 function playFrom(i) { playing = true; playClip(i); }
@@ -328,8 +326,10 @@ $("#play").addEventListener("click", () => { if (playing) stop(); else playFrom(
 $("#prev").addEventListener("click", () => { playing = true; playClip(Math.max(0, qi - 1)); });
 $("#next").addEventListener("click", () => { playing = true; playClip(Math.min(queue.length - 1, qi + 1)); });
 $("#loop").addEventListener("click", e => { loop = !loop; e.currentTarget.setAttribute("aria-pressed", loop); });
-$("#speed").addEventListener("change", () => { au.playbackRate = +$("#speed").value; store.speed2 = $("#speed").value; save(); });
-if (store.speed2) $("#speed").value = store.speed2;
+const SPEEDS = [[0.6, "很慢"], [0.72, "慢"], [0.85, "正常"], [1, "快"]];
+let spI = SPEEDS.findIndex(x => String(x[0]) === String(store.speed2)); if (spI < 0) spI = 2;
+$("#speed").textContent = SPEEDS[spI][1];
+$("#speed").addEventListener("click", () => { spI = (spI + 1) % SPEEDS.length; $("#speed").textContent = SPEEDS[spI][1]; au.playbackRate = SPEEDS[spI][0]; store.speed2 = SPEEDS[spI][0]; save(); });
 au.preservesPitch = true;
 
 const start = location.hash.slice(1);
