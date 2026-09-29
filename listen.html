@@ -46,7 +46,9 @@ h1 small{font-family:var(--font-body);font-size:10.5px;font-weight:500;color:var
 button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hint{font-size:13px;color:var(--muted);margin:14px 4px 0}
 .hint b{color:var(--ink-soft)}
-#list{display:grid;gap:10px;padding-block:14px 120px}
+#list{display:grid;gap:10px;padding-block:6px 120px}
+.grp{font-family:var(--cjk);font-size:15px;font-weight:700;margin:14px 4px 0;display:flex;align-items:baseline;gap:8px}
+.grp small{font-size:12px;font-weight:400;color:var(--muted)}
 .card{display:flex;align-items:center;gap:12px;border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
 .card:hover{border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
 .card .t{font-weight:600;font-size:15.5px;font-family:var(--cjk)}
@@ -115,13 +117,6 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
         <button type="button" data-k="text" aria-pressed="false">课文</button>
         <button type="button" data-k="culture" aria-pressed="false">印尼视野</button>
       </div>
-      <div class="seg" id="books" role="group" aria-label="资料">
-        <button type="button" data-b="" aria-pressed="true">全部</button>
-        <button type="button" data-b="武功秘籍" aria-pressed="false">武功秘籍</button>
-        <button type="button" data-b="BIPA 1" aria-pressed="false">BIPA 1</button>
-        <button type="button" data-b="Daring" aria-pressed="false">Daring</button>
-        <button type="button" data-b="BIPA 2" aria-pressed="false">BIPA 2</button>
-      </div>
     </div>
   </div>
 </header>
@@ -142,7 +137,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
     <button class="ctl" id="loop" type="button" aria-pressed="false" aria-label="单句循环" title="单句循环"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/><text x="10" y="15" font-size="7" fill="currentColor" stroke="none">1</text></svg></button>
     <div class="info"><b id="nowTitle"></b><span id="nowPos"></span></div>
     <select id="speed" aria-label="语速">
-      <option value="0.7">0.7×</option><option value="0.85">0.85×</option><option value="1" selected>1×</option><option value="1.15">1.15×</option>
+      <option value="0.6">很慢</option><option value="0.72">慢</option><option value="0.85" selected>正常</option><option value="1">快</option>
     </select>
   </div>
 </div>
@@ -174,14 +169,22 @@ let kind = store.kind || "exam", book = store.book || "", showId = !!store.showI
 
 function setSeg(sel, attr, val) { document.querySelectorAll(sel + " button").forEach(b => b.setAttribute("aria-pressed", b.dataset[attr] === val)); }
 
+const GROUPS = [["武功秘籍", "武功秘籍", "考试回忆原题"], ["BIPA 1", "BIPA 1 课本", "含 Daring 原版"], ["BIPA 2", "BIPA 2 课本", ""]];
+const grpOf = b => b === "Daring" ? "BIPA 1" : b;
 function renderList() {
-  setSeg("#kinds", "k", kind); setSeg("#books", "b", book);
+  setSeg("#kinds", "k", kind);
   $("#kindHint").innerHTML = HINT[kind];
-  const rows = DATA.filter(it => it.kind === kind && (!book || it.book === book));
-  $("#list").innerHTML = rows.length ? rows.map(it => {
-    const n = it.kind === "exam" ? it.lines.length / 2 + " 问" : it.lines.length + " 句";
-    return `<button class="card glass" type="button" data-open="${it.id}"><div><div class="t">${esc(it.title)}</div><div class="m"><span class="book ${bookCls(it.book)}">${esc(it.book)}</span> · ${n}${it.qa.length ? " · 问答 " + it.qa.length : ""}</div></div><div class="go">${store.done[it.id] ? '<span class="done">✓ 听过</span>' : ""}<span class="pbtn">${IC.play}</span></div></button>`;
-  }).join("") : '<p class="hint">这个资料里没有这类内容，换一个试试。</p>';
+  let html = "";
+  for (const [key, name, sub] of GROUPS) {
+    const rows = DATA.filter(it => it.kind === kind && grpOf(it.book) === key);
+    if (!rows.length) continue;
+    html += `<h2 class="grp">${name}<small>${sub ? sub + " · " : ""}${rows.length} 段</small></h2>`;
+    html += rows.map(it => {
+      const n = it.kind === "exam" ? it.lines.length / 2 + " 问" : it.lines.length + " 句";
+      return `<button class="card glass" type="button" data-open="${it.id}"><div><div class="t">${esc(it.title)}</div><div class="m">${n}${it.qa.length ? " · 带问答 " + it.qa.length + " 题" : ""}</div></div><div class="go">${store.done[it.id] ? '<span class="done">✓ 听过</span>' : ""}<span class="pbtn">${IC.play}</span></div></button>`;
+    }).join("");
+  }
+  $("#list").innerHTML = html;
 }
 
 // ---------- player state
@@ -281,8 +284,6 @@ document.addEventListener("click", ev => {
   const t = ev.target;
   const k = t.closest("[data-k]:not(.ln)")?.dataset.k;
   if (t.closest("#kinds") && k) { kind = k; store.kind = k; save(); return renderList(); }
-  const b = t.closest("#books button");
-  if (b) { book = b.dataset.b; store.book = book; save(); return renderList(); }
   const o = t.closest("[data-open]"); if (o) return openItem(o.dataset.open, true);
   if (t.closest("[data-back]")) return back();
   const one = t.closest("[data-one]");
@@ -302,8 +303,8 @@ $("#play").addEventListener("click", () => { if (playing) stop(); else playFrom(
 $("#prev").addEventListener("click", () => { playing = true; playClip(Math.max(0, qi - 1)); });
 $("#next").addEventListener("click", () => { playing = true; playClip(Math.min(queue.length - 1, qi + 1)); });
 $("#loop").addEventListener("click", e => { loop = !loop; e.currentTarget.setAttribute("aria-pressed", loop); });
-$("#speed").addEventListener("change", () => { au.playbackRate = +$("#speed").value; store.speed = $("#speed").value; save(); });
-if (store.speed) $("#speed").value = store.speed;
+$("#speed").addEventListener("change", () => { au.playbackRate = +$("#speed").value; store.speed2 = $("#speed").value; save(); });
+if (store.speed2) $("#speed").value = store.speed2;
 au.preservesPitch = true;
 
 const start = location.hash.slice(1);
