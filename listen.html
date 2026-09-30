@@ -112,18 +112,60 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .note{font-size:12.5px;color:var(--gold);margin:8px 4px}
 .qa h3{font-size:15px;margin:18px 4px 8px;font-family:var(--cjk)}
 .count{display:inline-block;min-width:26px;text-align:center;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
-/* player */
-.player{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
-.player .in{max-width:760px;margin:0 auto;border-radius:20px;padding:10px 12px;display:flex;align-items:center;gap:8px}
-.player .ctl{width:40px;height:40px;border-radius:99px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer}
-.player .ctl svg{width:20px;height:20px}
-.player .main{width:50px;height:50px;background:var(--accent);color:var(--on-accent);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 35%,transparent)}
-.player .main svg{width:22px;height:22px}
-.player .info{flex:1;min-width:0;font-size:12px;color:var(--muted);line-height:1.3}
-.player .info b{display:block;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cjk)}
-.player .spd{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer;min-width:56px}
-.player .ctl[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
-@media (max-width:480px){.player .info{display:none}}
+/* player — liquid glass */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.player>*{pointer-events:auto}
+.lg{position:relative;isolation:isolate;
+  background:linear-gradient(160deg,rgba(255,255,255,.62),rgba(255,255,255,.34));
+  backdrop-filter:blur(30px) saturate(190%) brightness(1.04);-webkit-backdrop-filter:blur(30px) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 1px rgba(255,255,255,.35),inset 0 0 0 .5px rgba(255,255,255,.55),0 1px 2px rgba(30,40,110,.06),0 14px 40px rgba(40,50,140,.16)}
+.lg::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;z-index:-1;pointer-events:none;
+  background:linear-gradient(150deg,rgba(255,255,255,.95),rgba(255,255,255,.12) 38%,rgba(255,255,255,.05) 62%,rgba(255,255,255,.7));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lg{background:linear-gradient(160deg,rgba(70,72,86,.52),rgba(28,28,34,.46));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 .5px rgba(255,255,255,.10),0 14px 44px rgba(0,0,0,.5)}
+  :root:not([data-theme="light"]) .lg::before{background:linear-gradient(150deg,rgba(255,255,255,.34),rgba(255,255,255,.04) 40%,rgba(255,255,255,.02) 60%,rgba(255,255,255,.18))}}
+:root[data-theme="dark"] .lg{background:linear-gradient(160deg,rgba(70,72,86,.52),rgba(28,28,34,.46));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 .5px rgba(255,255,255,.10),0 14px 44px rgba(0,0,0,.5)}
+:root[data-theme="dark"] .lg::before{background:linear-gradient(150deg,rgba(255,255,255,.34),rgba(255,255,255,.04) 40%,rgba(255,255,255,.02) 60%,rgba(255,255,255,.18))}
+.player .in{max-width:400px;margin:0 auto;border-radius:30px;padding:6px 10px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;justify-items:center;overflow:hidden}
+.prog{position:absolute;left:36px;right:36px;top:3px;height:2px;border-radius:2px;background:color-mix(in srgb,var(--ink) 8%,transparent);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.ctl{width:42px;height:42px;border-radius:99px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .45s cubic-bezier(.34,1.56,.64,1),background .25s,color .25s}
+.ctl:active{transform:scale(.84);transition-duration:.12s}
+.ctl svg{width:18px;height:18px}
+.ctl.main{width:48px;height:48px;color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent);box-shadow:none}
+.ctl.main svg{width:19px;height:19px}
+.ctl.side{width:52px;height:38px;border-radius:99px;font:inherit;font-size:13px;font-weight:600;font-family:var(--cjk);background:transparent;color:var(--ink-soft)}
+.ctl.side[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.ctl .pop{display:grid;place-items:center;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{transform:scale(.4) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
+/* mode menu */
+.scrim{position:fixed;inset:0;z-index:-1;background:transparent}
+.menu{position:absolute;bottom:calc(100% - 2px);left:max(16px,calc(50% - 200px));width:236px;border-radius:22px;padding:6px;
+  opacity:0;transform:translateY(14px) scale(.55);transform-origin:18% 100%;pointer-events:none;filter:blur(4px);
+  transition:transform .42s cubic-bezier(.32,1.4,.6,1),opacity .22s,filter .3s}
+.menu.open{opacity:1;transform:none;pointer-events:auto;filter:none}
+.menu .h{font-size:11.5px;color:var(--muted);padding:6px 12px 4px;font-family:var(--cjk)}
+.mi{display:grid;grid-template-columns:28px 1fr 18px;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;
+  padding:9px 10px;border-radius:14px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .2s,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.mi:active{transform:scale(.97);background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.mi svg{width:20px;height:20px}
+.mi b{display:block;font-size:14.5px;font-weight:600;font-family:var(--cjk)}
+.mi small{display:block;font-size:11.5px;color:var(--muted);font-family:var(--cjk);line-height:1.3}
+.mi .ck{opacity:0;color:var(--accent);transform:scale(.3);transition:opacity .2s,transform .4s cubic-bezier(.34,1.56,.64,1)}
+.mi[aria-checked="true"]{background:color-mix(in srgb,var(--accent) 11%,transparent)}
+.mi[aria-checked="true"] .ic{color:var(--accent)}
+.mi[aria-checked="true"] .ck{opacity:1;transform:none}
+.menu.open .mi{animation:miIn .45s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i) * 40ms + 60ms)}
+@keyframes miIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.toast{position:absolute;bottom:calc(100% + 4px);left:50%;max-width:min(320px,calc(100% - 32px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:13px;font-weight:600;font-family:var(--cjk);padding:8px 16px;border-radius:99px;color:var(--ink);
+  opacity:0;transform:translate(-50%,10px) scale(.9);transition:opacity .25s,transform .45s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+#detail.in-r{animation:inR .45s cubic-bezier(.22,1,.36,1)} #detail.in-l{animation:inL .45s cubic-bezier(.22,1,.36,1)}
+@keyframes inR{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 body::before{background:
@@ -169,13 +211,16 @@ body::before{background:
 </main>
 
 <div class="player" id="player" hidden>
-  <div class="in glass">
-    <button class="ctl" id="prev" type="button" aria-label="上一句"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="toast lg" id="toast" role="status" aria-live="polite"></div>
+  <div class="menu lg" id="menu" role="menu" aria-label="播放模式"></div>
+  <div class="in lg">
+    <div class="prog"><i id="prog"></i></div>
+    <button class="ctl side" id="mode" type="button" aria-haspopup="menu" aria-label="播放模式"></button>
+    <button class="ctl" id="prev" type="button" aria-label="上一句（双击：上一篇）"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
     <button class="ctl main" id="play" type="button" aria-label="播放"></button>
-    <button class="ctl" id="next" type="button" aria-label="下一句"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
-    <button class="ctl" id="loop" type="button" aria-pressed="false" aria-label="单句循环" title="单句循环"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/><text x="10" y="15" font-size="7" fill="currentColor" stroke="none">1</text></svg></button>
-    <div class="info"><b id="nowTitle"></b><span id="nowPos"></span></div>
-    <button class="spd" id="speed" type="button" aria-label="语速">正常</button>
+    <button class="ctl" id="next" type="button" aria-label="下一句（双击：下一篇）"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+    <button class="ctl side" id="speed" type="button" aria-label="语速">正常</button>
   </div>
 </div>
 <audio id="au" preload="auto"></audio>
@@ -240,7 +285,15 @@ function renderList() {
 
 // ---------- player state
 const au = $("#au");
-let cur = null, queue = [], qi = -1, playing = false, loop = false, timer = null;
+let cur = null, queue = [], qi = -1, playing = false, timer = null;
+// 播放模式：seq 顺序播完停 / one 单句循环 / all 单篇循环 / next 自动下一篇
+const MODES = {
+  seq: ["顺序播放", "播完这篇就停", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M4 12h9M4 18h6"/><path d="M16 15l4 3-4 3z" fill="currentColor"/></svg>'],
+  one: ["单句循环", "一句反复听", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/><path d="M11 10.5l1.5-1v5" stroke-width="1.8"/></svg>'],
+  all: ["单篇循环", "整篇反复听", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>'],
+  next: ["自动下一篇", "播完接着播下一篇", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="11" height="7" rx="2"/><rect x="3" y="14" width="11" height="7" rx="2" opacity=".45"/><path d="M18 8v9m-3-3l3 3 3-3"/></svg>']
+};
+let mode = MODES[store.mode] ? store.mode : "seq";
 
 function wordLinks(t) {
   return esc(t).replace(/[A-Za-z]+(?:-[A-Za-z]+)*/g, w => `<a href="dict.html#${w.toLowerCase()}" target="_blank" rel="noopener">${w}</a>`);
@@ -273,11 +326,11 @@ function openItem(id, autoplay) {
   $("#detail").innerHTML = html;
   $("#home").hidden = true; $("#detail").hidden = false; $("#player").hidden = false;
   document.querySelectorAll(".seg").forEach(x => x.hidden = true);
-  $("#nowTitle").textContent = cur.title;
   window.scrollTo({ top: 0 });
   try { history.replaceState(null, "", "#" + id); } catch (e) {}
   updPos();
   if (autoplay) playFrom(0);
+  if (!store.tipDbl) { store.tipDbl = 1; save(); setTimeout(() => toast("小技巧：双击 ⏮ ⏭ 切换上/下一篇"), 600); }
 }
 function back() {
   stop(); cur = null;
@@ -294,7 +347,8 @@ function mark(k) {
 }
 function updPos() {
   $("#play").innerHTML = playing ? IC.pause : IC.play;
-  $("#nowPos").textContent = qi >= 0 ? `第 ${Math.min(qi + 1, queue.length)} / ${queue.length} 句` : `共 ${queue.length} 句`;
+  $("#play").setAttribute("aria-label", playing ? "暂停" : "播放");
+  $("#prog").style.width = (queue.length && qi >= 0 ? Math.min(qi + 1, queue.length) / queue.length * 100 : 0) + "%";
 }
 function playClip(i) {
   clearTimeout(timer);
@@ -309,12 +363,16 @@ function stop() { playing = false; clearTimeout(timer); au.pause(); document.que
 function finish() {
   playing = false; updPos();
   if (cur) { store.done[cur.id] = 1; save(); }
+  if (mode === "next") timer = setTimeout(() => jumpItem(1, true), 1500);
 }
 au.addEventListener("ended", () => {
   if (!playing) return;
-  if (loop) { timer = setTimeout(() => playClip(qi), 900); return; }
+  if (mode === "one") { timer = setTimeout(() => playClip(qi), 900); return; }
   const q = queue[qi], nx = queue[qi + 1];
-  if (!nx) return finish();
+  if (!nx) {
+    if (mode === "all") { if (cur) { store.done[cur.id] = 1; save(); } timer = setTimeout(() => playClip(0), 1600); return; }
+    return finish();
+  }
   let gap = cur.kind === "dlg" ? 500 : 700;
   if (q.role === "q" && nx.role === "a") gap = pause * 1000;
   if (cur.kind === "trans") gap = 4000;
@@ -351,13 +409,49 @@ document.addEventListener("click", ev => {
   if (rev) { ev.preventDefault(); rev.classList.remove("hid"); }
 });
 $("#play").addEventListener("click", () => { if (playing) stop(); else playFrom(qi >= 0 && qi < queue.length ? qi : 0); });
-$("#prev").addEventListener("click", () => { playing = true; playClip(Math.max(0, qi - 1)); });
-$("#next").addEventListener("click", () => { playing = true; playClip(Math.min(queue.length - 1, qi + 1)); });
-$("#loop").addEventListener("click", e => { loop = !loop; e.currentTarget.setAttribute("aria-pressed", loop); });
+// 单击 = 上/下一句，双击 = 上/下一篇（等 260ms 看有没有第二下）
+function tapper(el, single, dbl) {
+  let t = null;
+  el.addEventListener("click", () => { if (t) { clearTimeout(t); t = null; dbl(); } else t = setTimeout(() => { t = null; single(); }, 260); });
+}
+tapper($("#prev"), () => { playing = true; playClip(Math.max(0, qi - 1)); }, () => jumpItem(-1));
+tapper($("#next"), () => { playing = true; playClip(Math.min(queue.length - 1, qi + 1)); }, () => jumpItem(1));
+function siblings() { const out = []; for (const [key] of GROUPS) for (const it of DATA) if (it.kind === cur.kind && grpOf(it.book) === key) out.push(it); return out; }
+function jumpItem(d, auto) {
+  if (!cur) return;
+  const s = siblings(), n = s[s.findIndex(x => x.id === cur.id) + d];
+  if (!n) return toast(d > 0 ? (auto ? "这一类全部听完了 🎉" : "已经是最后一篇") : "已经是第一篇");
+  openItem(n.id, true);
+  const D = $("#detail"); D.classList.remove("in-r", "in-l"); void D.offsetWidth; D.classList.add(d > 0 ? "in-r" : "in-l");
+  toast((d > 0 ? "下一篇 · " : "上一篇 · ") + n.title);
+}
+let toastT = null;
+function toast(msg) {
+  const el = $("#toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 1800);
+}
+function drawMode(anim) {
+  const b = $("#mode");
+  b.innerHTML = `<span class="${anim ? "pop" : ""}">${MODES[mode][2]}</span>`;
+  b.setAttribute("aria-pressed", mode !== "seq"); b.setAttribute("aria-label", "播放模式：" + MODES[mode][0]);
+  $("#menu").innerHTML = `<div class="h">播放模式</div>` + Object.entries(MODES).map(([k, m], i) =>
+    `<button class="mi" type="button" role="menuitemradio" style="--i:${i}" data-mode="${k}" aria-checked="${k === mode}"><span class="ic">${m[2]}</span><span><b>${m[0]}</b><small>${m[1]}</small></span><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join("");
+}
+function menu(open) { $("#menu").classList.toggle("open", open); $("#scrim").hidden = !open; $("#mode").setAttribute("aria-expanded", open); }
+$("#mode").addEventListener("click", () => menu(!$("#menu").classList.contains("open")));
+$("#scrim").addEventListener("click", () => menu(false));
+$("#menu").addEventListener("click", e => {
+  const b = e.target.closest("[data-mode]"); if (!b) return;
+  mode = b.dataset.mode; store.mode = mode; save();
+  $("#menu").querySelectorAll(".mi").forEach(x => x.setAttribute("aria-checked", x === b));
+  setTimeout(() => { menu(false); drawMode(true); toast(MODES[mode][0]); }, 180);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") menu(false); });
+drawMode(false);
 const SPEEDS = [[0.6, "很慢"], [0.72, "慢"], [0.85, "正常"], [1, "快"]];
 let spI = SPEEDS.findIndex(x => String(x[0]) === String(store.speed2)); if (spI < 0) spI = 2;
 $("#speed").textContent = SPEEDS[spI][1];
-$("#speed").addEventListener("click", () => { spI = (spI + 1) % SPEEDS.length; $("#speed").textContent = SPEEDS[spI][1]; au.playbackRate = SPEEDS[spI][0]; store.speed2 = SPEEDS[spI][0]; save(); });
+$("#speed").addEventListener("click", () => { spI = (spI + 1) % SPEEDS.length; $("#speed").innerHTML = `<span class="pop">${SPEEDS[spI][1]}</span>`; au.playbackRate = SPEEDS[spI][0]; store.speed2 = SPEEDS[spI][0]; save(); });
 au.preservesPitch = true;
 
 const start = location.hash.slice(1);
