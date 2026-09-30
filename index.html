@@ -233,8 +233,8 @@ textarea.din{min-height:96px;font-size:19px;resize:vertical}
 @keyframes starPop{0%{transform:scale(.3) rotate(-30deg)}60%{transform:scale(1.3) rotate(8deg)}100%{transform:none}}
 /* 随身听 */
 .walkcard{display:flex;align-items:center;gap:14px;border-radius:20px;padding:16px 18px;margin-top:14px;text-decoration:none;color:inherit}
-.walkcard .ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;color:#fff;flex-shrink:0;background:radial-gradient(120% 90% at 50% 0%,#8f8cff 0%,var(--prac) 60%,#3d3ab8 100%);box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 6px 16px color-mix(in srgb,var(--prac) 35%,transparent)}
-.walkcard .ic svg{width:24px;height:24px}
+.walkcard .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex-shrink:0;background:var(--prac-soft);color:var(--prac)}
+.walkcard .ic svg{width:22px;height:22px}
 .walkcard b{display:block;font-family:var(--cjk);font-size:16.5px}
 .walkcard small{color:var(--muted);font-size:12.5px}
 .walkcard .go{margin-left:auto;color:var(--prac);font-weight:600;white-space:nowrap}
@@ -301,6 +301,13 @@ textarea.din{min-height:96px;font-size:19px;resize:vertical}
 .ctl .pop{display:grid;place-items:center;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pop{0%{transform:scale(.4) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
 @media (max-width:520px){.wsrc{grid-template-columns:repeat(2,1fr)}.wid{font-size:30px}}
+
+/* 播放条：无色透明玻璃，透出背景颜色 */
+.in.lg,.wbar.lg{background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.04))!important;
+  backdrop-filter:blur(12px) saturate(180%)!important;-webkit-backdrop-filter:blur(12px) saturate(180%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 .5px rgba(255,255,255,.45),0 8px 28px rgba(40,50,140,.10)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .in.lg,:root:not([data-theme="light"]) .wbar.lg{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 .5px rgba(255,255,255,.10),0 10px 32px rgba(0,0,0,.35)!important}}
+:root[data-theme="dark"] .in.lg,:root[data-theme="dark"] .wbar.lg{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02))!important}
 @media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.modes{grid-template-columns:1fr}.word{font-size:34px}}
 
 body::before{background:
@@ -570,7 +577,7 @@ const ICON = {
   words: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="13" height="16" rx="2.5"/><path d="M8 2h10.5A2.5 2.5 0 0 1 21 4.5V17"/></svg>',
   ear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8.5a6 6 0 1 1 12 0c0 3.5-3 4.5-3 7.5a3 3 0 0 1-5.5 1.7"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
-  walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8" fill="currentColor"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8" fill="currentColor"/></svg>',
+  walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8"/></svg>',
   text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h7M15 12h5M4 18h16"/><rect x="11" y="10" width="4" height="4" rx="1"/></svg>'
 };
 
