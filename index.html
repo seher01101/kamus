@@ -284,12 +284,51 @@ textarea.din{min-height:96px;font-size:19px;resize:vertical}
 @keyframes breath{0%,100%{opacity:.45}50%{opacity:1}}
 .wans{border-top:1px dashed var(--line);padding-top:10px;transition:filter .4s,opacity .4s}
 /* 考试倒计时 */
-.cd{display:inline-flex;align-items:baseline;gap:4px;margin-top:8px;font-family:var(--cjk);font-size:13px;color:var(--ink-soft);background:var(--prac-soft);border-radius:99px;padding:3px 12px}
-.cd b{font-family:var(--font-display);font-size:18px;color:var(--prac);font-variant-numeric:tabular-nums}
-.cd{position:relative;cursor:pointer}
-.cd small{font-size:11.5px;color:var(--muted);margin-left:4px}
+
+/* 考试倒计时胶囊 + 日历 */
+.cd{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font:inherit;font-family:var(--cjk);font-size:13.5px;color:var(--ink-soft);
+  background:var(--glass);border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 var(--glass-hi);border-radius:99px;padding:5px 14px 5px 11px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.cd:active{transform:scale(.95)}
+.cd svg{width:16px;height:16px;color:var(--prac);flex-shrink:0}
+.cd b{font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--prac);font-variant-numeric:tabular-nums;margin:0 1px}
+.cd small{font-size:12px;color:var(--muted);padding-left:8px;border-left:1px solid var(--line)}
 .cd.add{color:var(--prac);font-weight:600}
-.cdin{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}
+#dp{position:fixed;inset:0;z-index:60}
+.dpscrim{position:absolute;inset:0;background:rgba(20,20,40,.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;transition:opacity .3s}
+.dpp{position:absolute;left:50%;top:50%;width:min(340px,calc(100vw - 32px));border-radius:26px;padding:16px 16px 14px;
+  background:color-mix(in srgb,var(--surface) 78%,transparent);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 var(--glass-hi),0 24px 60px rgba(30,30,80,.22);
+  opacity:0;transform:translate(-50%,-46%) scale(.94);transition:opacity .25s,transform .45s cubic-bezier(.32,1.3,.6,1)}
+#dp.open .dpscrim{opacity:1}
+#dp.open .dpp{opacity:1;transform:translate(-50%,-50%)}
+.dph{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px}
+.dph b{font-family:var(--cjk);font-size:16px}
+.dpx{border:0;background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--muted);width:28px;height:28px;border-radius:99px;cursor:pointer;font-size:12px}
+.dpm{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dpm span{font-family:var(--cjk);font-weight:600;font-size:15px}
+.dpm button{border:0;background:transparent;color:var(--prac);font-size:24px;line-height:1;width:36px;height:36px;border-radius:99px;cursor:pointer}
+.dpm button:active{background:var(--prac-soft)}
+.dpw,.dpg{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+.dpw span{font-size:11.5px;color:var(--muted);padding:4px 0;font-family:var(--cjk)}
+.dpg{row-gap:2px}
+.dpg.nx{animation:dpN .35s cubic-bezier(.22,1,.36,1)} .dpg.pv{animation:dpP .35s cubic-bezier(.22,1,.36,1)}
+@keyframes dpN{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes dpP{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.dd{justify-self:center;width:38px;height:38px;border:0;border-radius:99px;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.dd:hover:not(:disabled):not(.on){background:var(--prac-soft)}
+.dd:disabled{color:color-mix(in srgb,var(--muted) 55%,transparent);cursor:default}
+.dd.now{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--prac) 45%,transparent)}
+.dd.on{background:var(--prac);color:#fff;font-weight:700;box-shadow:0 4px 12px color-mix(in srgb,var(--prac) 35%,transparent)}
+.dd.pop{animation:ddPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes ddPop{0%{transform:scale(.6)}100%{transform:none}}
+.dpi{text-align:center;font-family:var(--cjk);font-size:13.5px;color:var(--muted);margin:10px 0 12px;min-height:22px}
+.dpi b{font-family:var(--font-display);font-size:20px;color:var(--prac);margin:0 2px}
+.dpb{display:flex;gap:8px}
+.dpb button{flex:1;font:inherit;font-family:var(--cjk);font-size:15px;font-weight:600;border:0;border-radius:14px;padding:11px;cursor:pointer}
+.dpc{background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink-soft)}
+.dpok{background:var(--prac);color:#fff}
+.dpok:disabled{opacity:.4;cursor:default}
 /* liquid glass player */
 .wplayer{position:fixed;left:0;right:0;bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px));z-index:10;padding:8px 16px;pointer-events:none}
 @media (min-width:900px){.wplayer{left:210px;bottom:0;padding-bottom:14px}}
@@ -510,19 +549,55 @@ function FLOWLABEL() {
   return next ? (started ? "继续：" + next.t + " ›" : "一键按顺序做完 ›") : "✓ 今天都完成了";
 }
 function startFlow() { const next = plan().find(s => !s.done); if (next) runStep(next.k); else { day().nw -= S.newPerDay; save(); runStep("new"); } }
-// 考试倒计时：每个人自己选日期（S.examDate = "YYYY-MM-DD"，跟设置一起同步）
+// 考试倒计时：每个人自己选日期（S.examDate = "YYYY-MM-DD"，跟设置一起同步）；日历是自己画的毛玻璃弹层
+const CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const daysTo = v => { const [y, m, d] = v.split("-").map(Number), t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(y, m - 1, d) - t) / 864e5); };
 function examLeft() {
-  const pick = `<input type="date" class="cdin" id="examPick" value="${S.examDate || ""}" aria-label="选择考试日期">`;
-  if (!S.examDate) return `<label class="cd add">＋ 设置考试日期${pick}</label>`;
-  const [y, m, d] = S.examDate.split("-").map(Number), t = new Date(); t.setHours(0, 0, 0, 0);
-  const n = Math.round((new Date(y, m - 1, d) - t) / 864e5);
-  const txt = n > 0 ? `距考试还有 <b>${n}</b> 天` : n === 0 ? `今天考试，<b>Semangat!</b>` : `考试已结束 · 点这里改日期`;
-  return `<label class="cd">${txt}<small>${m}月${d}日</small>${pick}</label>`;
+  if (!S.examDate) return `<button type="button" class="cd add" data-dp>${CAL}<span>设置考试日期</span></button>`;
+  const n = daysTo(S.examDate), [, m, d] = S.examDate.split("-").map(Number);
+  const txt = n > 0 ? `距考试还有 <b>${n}</b> 天` : n === 0 ? `今天考试 <b>Semangat!</b>` : `考试已结束 · 换个日期`;
+  return `<button type="button" class="cd" data-dp>${CAL}<span>${txt}</span><small>${m}月${d}日</small></button>`;
 }
-document.addEventListener("change", e => {
-  if (e.target.id !== "examPick") return;
-  S.examDate = e.target.value || ""; S.st = Date.now(); save(); todayPage();
+let DP = null;                               // {y, m, sel}
+function dpOpen() {
+  const base = S.examDate ? new Date(...S.examDate.split("-").map((x, i) => i === 1 ? x - 1 : +x)) : new Date();
+  DP = { y: base.getFullYear(), m: base.getMonth(), sel: S.examDate || "" };
+  let el = $("#dp");
+  if (!el) { el = document.createElement("div"); el.id = "dp"; document.body.appendChild(el); }
+  dpDraw(); requestAnimationFrame(() => el.classList.add("open"));
+}
+function dpClose() { const el = $("#dp"); if (!el) return; el.classList.remove("open"); setTimeout(() => el.remove(), 320); }
+function dpDraw(anim) {
+  const el = $("#dp"), first = new Date(DP.y, DP.m, 1), n = new Date(DP.y, DP.m + 1, 0).getDate(), today = ymd(new Date());
+  let cells = "";
+  for (let i = 0; i < first.getDay(); i++) cells += "<span></span>";
+  for (let d = 1; d <= n; d++) {
+    const v = ymd(new Date(DP.y, DP.m, d)), past = v < today;
+    cells += `<button type="button" class="dd${v === DP.sel ? " on" : ""}${v === today ? " now" : ""}" data-dd="${v}" ${past ? "disabled" : ""}>${d}</button>`;
+  }
+  const left = DP.sel ? daysTo(DP.sel) : null;
+  el.innerHTML = `<div class="dpscrim" data-dpx></div><div class="dpp" role="dialog" aria-label="选择考试日期">
+    <div class="dph"><b>考试日期</b><button type="button" class="dpx" data-dpx aria-label="关闭">✕</button></div>
+    <div class="dpm"><button type="button" data-dpm="-1" aria-label="上个月">‹</button><span>${DP.y} 年 ${DP.m + 1} 月</span><button type="button" data-dpm="1" aria-label="下个月">›</button></div>
+    <div class="dpw">${[..."日一二三四五六"].map(x => `<span>${x}</span>`).join("")}</div>
+    <div class="dpg${anim ? " " + anim : ""}">${cells}</div>
+    <div class="dpi">${left == null ? "点一个日期" : left === 0 ? "就是今天，加油！" : `距考试还有 <b>${left}</b> 天`}</div>
+    <div class="dpb">${S.examDate ? `<button type="button" class="dpc" data-dpclear>清除</button>` : ""}<button type="button" class="dpok" data-dpok ${DP.sel ? "" : "disabled"}>确定</button></div>
+  </div>`;
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-dp]")) return dpOpen();
+  if (!DP || !$("#dp")) return;
+  if (e.target.closest("[data-dpx]")) return dpClose();
+  const mv = e.target.closest("[data-dpm]");
+  if (mv) { const d = new Date(DP.y, DP.m + +mv.dataset.dpm, 1); DP.y = d.getFullYear(); DP.m = d.getMonth(); return dpDraw(+mv.dataset.dpm > 0 ? "nx" : "pv"); }
+  const dd = e.target.closest("[data-dd]");
+  if (dd) { DP.sel = dd.dataset.dd; dpDraw(); const b = document.querySelector(`[data-dd="${DP.sel}"]`); b && b.classList.add("pop"); return; }
+  if (e.target.closest("[data-dpclear]")) { S.examDate = ""; S.st = Date.now(); save(); dpClose(); return todayPage(); }
+  if (e.target.closest("[data-dpok]") && DP.sel) { S.examDate = DP.sel; S.st = Date.now(); save(); dpClose(); return todayPage(); }
 });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dp")) dpClose(); });
 function todayPage() {
   const d = day(), b = book(), due = dueList().length, lr = learned().length;
   const newLeft = Math.max(0, S.newPerDay - d.nw), dictLeft = Math.max(0, S.dictPerDay - d.dt);
