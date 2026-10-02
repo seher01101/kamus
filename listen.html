@@ -85,6 +85,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .pset .ch button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-soft);padding:4px 10px;border-radius:7px;cursor:pointer;white-space:nowrap}
 .pset .ch button[aria-pressed="true"]{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 @media (max-width:520px){.grp small{display:none}}
+.pset.zo .rrep{display:none}
+@media (max-width:520px){.pset .ch[data-pset="zhm"]{display:grid;grid-template-columns:1fr 1fr;width:100%}}
 .pnote{font-size:12px;color:var(--muted);margin:8px 0 0}
 .card .cmain{flex:1;min-width:0;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -286,6 +288,7 @@ async function listenSync() {
 store.done = store.done || {};
 let kind = store.kind || "exam", book = store.book || "", showId = !!store.showId, showZh = !!store.showZh, pause = store.pause || 6;
 let zhm = store.zhm || "off", rep = store.rep || 1, gapK = store.gap || "m";      // 怎么念 / 念几遍 / 停顿
+const pnote = () => ({ zo: "只念中文，留时间让你自己说出印尼语（练中译印，不放答案；想对答案选「中文 → 印尼语」）", zi: "先听中文，自己说出印尼语，再听正确说法（练中译印）", iz: "先听印尼语，自己想意思，再听中文对答案" }[zhm] || "只念印尼语；要中文提示就选其他几种");
 const GAPS = { s: [500, 700], m: [1100, 1500], l: [2200, 3000] };                     // [两种语言之间, 句与句之间]
 
 function setSeg(sel, attr, val) { document.querySelectorAll(sel + " button").forEach(b => b.setAttribute("aria-pressed", b.dataset[attr] === val)); }
@@ -343,11 +346,11 @@ function openItem(id, autoplay) {
     <button class="tog" type="button" data-opt="zh" aria-pressed="${showZh}">显示中文</button>
     ${cur.kind === "exam" ? `<button class="tog" type="button" data-opt="pause" aria-pressed="true">答题停顿 ${pause} 秒</button>` : ""}
   </div>
-  ${cur.kind === "exam" ? "" : `<div class="pset glass">
-    <div class="r"><span>怎么念</span><div class="ch" data-pset="zhm">${[["off", "只念印尼语"], ["iz", "印尼语 → 中文"], ["zi", "中文 → 印尼语"]].map(([v, n]) => `<button type="button" data-v="${v}" aria-pressed="${zhm === v}">${n}</button>`).join("")}</div></div>
-    <div class="r"><span>印尼语念几遍</span><div class="ch" data-pset="rep">${[1, 2, 3].map(v => `<button type="button" data-v="${v}" aria-pressed="${rep === v}">${v}</button>`).join("")}</div></div>
+  ${cur.kind === "exam" ? "" : `<div class="pset glass ${zhm === "zo" ? "zo" : ""}">
+    <div class="r"><span>怎么念</span><div class="ch" data-pset="zhm">${[["off", "只念印尼语"], ["zo", "只念中文"], ["iz", "印尼语 → 中文"], ["zi", "中文 → 印尼语"]].map(([v, n]) => `<button type="button" data-v="${v}" aria-pressed="${zhm === v}">${n}</button>`).join("")}</div></div>
+    <div class="r rrep"><span>印尼语念几遍</span><div class="ch" data-pset="rep">${[1, 2, 3].map(v => `<button type="button" data-v="${v}" aria-pressed="${rep === v}">${v}</button>`).join("")}</div></div>
     <div class="r"><span>停顿</span><div class="ch" data-pset="gap">${[["s", "短"], ["m", "中"], ["l", "长"]].map(([v, n]) => `<button type="button" data-v="${v}" aria-pressed="${gapK === v}">${n}</button>`).join("")}</div></div>
-    <p class="pnote">${zhm === "zi" ? "先听中文，自己说出印尼语，再听正确说法（练中译印）" : zhm === "iz" ? "先听印尼语，自己想意思，再听中文对答案" : "只念印尼语；要中文提示就选上面两种之一"}</p>
+    <p class="pnote">${pnote()}</p>
   </div>`}
   <div class="lines">${cur.lines.map((l, i) => lineHTML(l, "L" + i)).join("")}</div>`;
   if (cur.zh) html += `<div class="para glass"><b>中文翻译</b><div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(cur.zh)}</div></div>`;
@@ -409,6 +412,7 @@ function stepsFor(i) {
   tail.cd = tail.g >= 3000;
   if (zhm === "off" || !q.za) return [...ids, tail];
   const zh = { a: q.za, r: 1, zh: 1 };
+  if (zhm === "zo") return [zh, { g: [3000, 5000, 8000][gi], cd: true }];   // 只念中文：念完留时间自己说印尼语
   if (zhm === "iz") return [...ids, { g: [700, 1200, 2200][gi] }, zh, tail];
   const think = [2000, 3500, 5000][gi];               // 中 → 印：留时间自己说出印尼语
   return [zh, { g: think, cd: true }, ...ids, tail];
@@ -483,9 +487,9 @@ document.addEventListener("click", ev => {
   const ps = t.closest("[data-pset] button");
   if (ps) {
     const g = ps.parentElement.dataset.pset, v = ps.dataset.v;
-    if (g === "zhm") { zhm = v; store.zhm = v; } if (g === "rep") { rep = +v; store.rep = rep; } if (g === "gap") { gapK = v; store.gap = v; }
+    if (g === "zhm") { zhm = v; store.zhm = v; $(".pset").classList.toggle("zo", v === "zo"); } if (g === "rep") { rep = +v; store.rep = rep; } if (g === "gap") { gapK = v; store.gap = v; }
     save(); ps.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === ps));
-    const note = $(".pnote"); if (note) note.textContent = zhm === "zi" ? "先听中文，自己说出印尼语，再听正确说法（练中译印）" : zhm === "iz" ? "先听印尼语，自己想意思，再听中文对答案" : "只念印尼语；要中文提示就选上面两种之一";
+    const note = $(".pnote"); if (note) note.textContent = pnote();
     if (playing && qi >= 0) { const k = steps[si]; steps = stepsFor(qi); si = Math.min(si, steps.length - 1); }
     return;
   }
