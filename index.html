@@ -448,7 +448,7 @@ const mastered = () => book().filter(k => S.w[k] && S.w[k].box >= 5).length;
 function streak() {
   let n = 0; const d = new Date();
   for (;;) { const k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const x = S.days[k]; if (x && (x.nw + x.rv + x.dt + (x.ds || 0)) > 0) { n++; d.setDate(d.getDate() - 1); } else break; }
+    const x = S.days[k]; if (x && (x.nw + x.rv + x.dt + (x.ds || 0) + (x.zt || 0)) > 0) { n++; d.setDate(d.getDate() - 1); } else break; }
   return n;
 }
 function grade(k, ok) {
@@ -466,6 +466,7 @@ function route() {
   const h = (location.hash || "#today").slice(1);
   document.querySelectorAll(".nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === (h.split("/")[0] === "words" ? "words" : (h.split("/")[0] === "dict" || h.split("/")[0] === "walk") ? "dict" : h === "today" ? "today" : "")));
   au.pause(); au.onended = null; au.onerror = null; FLOW = false; walkOff();
+  if (h === "walk/zt") return ztWalk(false);
   if (h.startsWith("walk")) return walkPage(h.split("/")[1]);
   if (h.startsWith("words")) return wordsHome();
   if (h === "dict/word") return dictWord();
@@ -480,6 +481,7 @@ const bookSeg = () => `<div class="seg" role="group" aria-label="词书"><button
 // ---------------- today (guided daily flow)
 let FLOW = false;
 const DS_GOAL = 5;
+const ZT_GOAL = 10;                         // 今日任务：真题录音（随身听考官问答，只放真题）每天听几题
 function greet() {
   const h = new Date().getHours();
   return h < 11 ? ["Selamat pagi", "早上好"] : h < 15 ? ["Selamat siang", "中午好"] : h < 19 ? ["Selamat sore", "下午好"] : ["Selamat malam", "晚上好"];
@@ -494,6 +496,7 @@ function plan() {
     { k: "new", t: "学新词", done: d.nw >= S.newPerDay, p: Math.min(1, d.nw / S.newPerDay), sub: `${Math.min(d.nw, S.newPerDay)} / ${S.newPerDay} 个 · 四选一` },
     { k: "dw", t: "听写今天的词", done: d.dw >= dwGoal, p: Math.min(1, d.dw / dwGoal), sub: `${Math.min(d.dw, dwGoal)} / ${dwGoal} 个`, goal: dwGoal },
     { k: "ds", t: "句子听写", done: d.ds >= DS_GOAL, p: Math.min(1, d.ds / DS_GOAL), sub: `${Math.min(d.ds, DS_GOAL)} / ${DS_GOAL} 句` },
+    { k: "zt", t: "听真题录音", done: (d.zt || 0) >= ZT_GOAL, p: Math.min(1, (d.zt || 0) / ZT_GOAL), sub: `${Math.min(d.zt || 0, ZT_GOAL)} / ${ZT_GOAL} 题 · 考官问，你先答` },
   ];
 }
 function weekStrip() {
@@ -501,7 +504,7 @@ function weekStrip() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now); d.setDate(now.getDate() - i);
     const k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const x = S.days[k], on = x && (x.nw + x.rv + x.dt + (x.ds || 0)) > 0;
+    const x = S.days[k], on = x && (x.nw + x.rv + x.dt + (x.ds || 0) + (x.zt || 0)) > 0;
     out.push(`<div class="wd ${on ? "on" : ""} ${i === 0 ? "now" : ""}"><span>${names[d.getDay()]}</span><i>${on ? "✓" : d.getDate()}</i></div>`);
   }
   return out.join("");
@@ -531,12 +534,18 @@ function runStep(k) {
     DQ = shuffle(unseen.length >= DS_GOAL ? unseen : all.slice()).slice(0, Math.max(1, DS_GOAL - d.ds)).map(s => ({ t: "s", s })); di = 0; dstat = { ok: 0, no: 0 };
     return dictStep();
   }
+  if (k === "zt") { ztWalk(true); }
+}
+function ztWalk(play) {                      // 打开随身听：考官问答 + 只看真题录音，从今天听到的下一题接着放
+  S.walk.src = "exam"; S.walk.cat.exam = "@真题"; if (S.walk.loop === "one") S.walk.loop = "seq"; save();
+  walkPage();
+  if (play && W.items.length) walkPlay((day().zt || 0) % W.items.length);
 }
 function flowNext() {
   const steps = plan(), done = steps.find(s => s.k === FLOW), next = steps.find(s => !s.done);
   if (!next) {
     FLOW = false;
-    $("#app").innerHTML = `<section class="hero glass center finish">${ring(1)}<div class="fin"><div class="bigt">Hebat!</div><p>太棒了！今天的四项都完成了。</p><p class="sub">连续学习 <b>${streak()}</b> 天 · 今天学了 ${day().nw} 个新词、复习 ${day().rv} 个</p>
+    $("#app").innerHTML = `<section class="hero glass center finish">${ring(1)}<div class="fin"><div class="bigt">Hebat!</div><p>太棒了！今天的任务都完成了。</p><p class="sub">连续学习 <b>${streak()}</b> 天 · 今天学了 ${day().nw} 个新词、复习 ${day().rv} 个</p>
       <div class="row2" style="justify-content:center"><a class="btn" href="#today" style="text-decoration:none">回到今日</a><a class="btn ghost" href="listen.html" style="text-decoration:none">去听力放松一下</a></div></div></section>`;
     return;
   }
@@ -619,6 +628,7 @@ function todayPage() {
     <a class="task glass ${newLeft + due === 0 ? "done" : ""}" href="#words"><span class="ic">${ICON.words}</span><span><b>背单词</b><small>${newLeft + due === 0 ? `今天新学 ${day().nw} 个 · 复习 ${day().rv} 个` : `还要新学 ${newLeft} 个 · 复习 ${due} 个`}${tomorrowDue() ? ` · 明天复习 ${tomorrowDue()} 个` : ""}</small></span><span class="go">${newLeft + due === 0 ? "✓ 完成" : "开始 ›"}</span></a>
     <a class="task glass ${dictLeft === 0 ? "done" : ""}" href="#dict/word"><span class="ic">${ICON.ear}</span><span><b>单词听写</b><small>今天还剩 ${dictLeft} 个</small></span><span class="go">${dictLeft === 0 ? "✓ 完成" : "开始 ›"}</span></a>
     <a class="task glass" href="#dict/sent"><span class="ic">${ICON.chat}</span><span><b>句子听写</b><small>今天 ${Math.min(day().ds || 0, DS_GOAL)} / ${DS_GOAL} 句 · 听一句，写出印尼语</small></span><span class="go">开始 ›</span></a>
+    <a class="task glass ${(d.zt || 0) >= ZT_GOAL ? "done" : ""}" href="#walk/zt"><span class="ic">${ICON.walk}</span><span><b>听真题录音</b><small>今天 ${Math.min(d.zt || 0, ZT_GOAL)} / ${ZT_GOAL} 题 · 0928 模拟考考官原话，问完先自己答</small></span><span class="go">${(d.zt || 0) >= ZT_GOAL ? "✓ 完成" : "开始 ›"}</span></a>
     <a class="task glass" href="#dict/cloze"><span class="ic">${ICON.text}</span><span><b>阅读填词</b><small>看中文，填课文里的考点词</small></span><span class="go">开始 ›</span></a>
   </div>
   <h2>云端同步</h2>
@@ -1039,7 +1049,13 @@ function walkPlay(i, si) {
 function walkStep() {
   if (!W.on) return;
   const st = W.steps[W.si];
-  if (!st) return walkPlay(S.walk.loop === "one" ? W.i : (W.i + 1) % W.items.length);
+  if (!st) {
+    if ((S.walk.cat || {})[S.walk.src] === "@真题") {
+      const d = day(); d.zt = (d.zt || 0) + 1; save();
+      if (FLOW === "zt" && d.zt >= ZT_GOAL) { walkStop(); walkOff(); return flowNext(); }
+    }
+    return walkPlay(S.walk.loop === "one" ? W.i : (W.i + 1) % W.items.length);
+  }
   au.onended = () => { W.si++; walkStep(); };
   au.onerror = () => { W.si++; walkStep(); };
   au.src = st.g ? silentUrl(st.g) : "audio/" + st.a + ".mp3";
