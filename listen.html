@@ -3,6 +3,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>[hidden]{display:none!important}
+.lmode{display:inline-flex;gap:2px;padding:3px;background:color-mix(in srgb,var(--surface-2) 70%,transparent);border-radius:11px;flex-shrink:0}
+.lmode a{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--ink-soft);padding:6px 16px;border-radius:9px;text-decoration:none;white-space:nowrap}
+.lmode a svg{width:15px;height:15px}
+.lmode a[aria-current]{background:var(--surface);color:var(--learn);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 :root{--prac:#5856d6;--prac-soft:#ecebfc;--learn:#0071e3;--learn-soft:#e4f0fd;--navh:62px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--prac:#7d7aff;--prac-soft:#24234d;--learn:#0a84ff;--learn-soft:#0a2e4d}}
 :root[data-theme="dark"]{--prac:#7d7aff;--prac-soft:#24234d;--learn:#0a84ff;--learn-soft:#0a2e4d}
@@ -62,7 +66,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;padding-block:
 .brand{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 h1{font-family:var(--font-display);font-size:24px;font-weight:700;margin:0;letter-spacing:-.01em}
 h1 small{font-family:var(--font-body);font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-left:8px}
-.brand a{font-size:13px;color:var(--accent);text-decoration:none;font-weight:500}
+.brand > a{font-size:13px;color:var(--accent);text-decoration:none;font-weight:500}
 .seg{display:flex;gap:4px;margin-top:10px;padding:3px;background:color-mix(in srgb,var(--surface-2) 70%,transparent);border-radius:10px;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
 .seg button{flex:1;white-space:nowrap;font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--ink-soft);padding:5px 10px;border-radius:8px;cursor:pointer}
@@ -75,6 +79,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .grp small{font-size:12px;font-weight:400;color:var(--muted)}
 .card{display:flex;align-items:center;gap:12px;border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
 .card:hover{border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.card .cmain{flex:1;min-width:0;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.wgo{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--learn);background:var(--learn-soft);border-radius:99px;padding:6px 12px;text-decoration:none;white-space:nowrap}
+.wgo svg{width:14px;height:14px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:520px){.brand h1 small{display:none}}
 .card .t{font-weight:600;font-size:15.5px;font-family:var(--cjk)}
 .card .m{font-size:12px;color:var(--muted);margin-top:1px}
 .card .go{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -197,8 +206,8 @@ body::before{background:
   <div class="wrap">
     <div class="bar glass">
       <div class="brand">
-        <h1>印尼语听力练习<small>Latihan Menyimak</small></h1>
-        
+        <h1>听力<small>Latihan Menyimak</small></h1>
+        <div class="lmode" role="group" aria-label="听力方式"><a href="listen.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>精听</a><a href="index.html#walk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>随身听</a></div>
       </div>
       <div class="seg" id="kinds" role="group" aria-label="类型">
         <button type="button" data-k="exam" aria-pressed="true">考官问答</button>
@@ -240,6 +249,7 @@ const DATA = [{"id": "e0", "kind": "exam", "book": "武功秘籍", "title": "自
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const IC = {
+  hp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>',
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
   spk: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
@@ -286,7 +296,7 @@ function renderList() {
     html += `<h2 class="grp">${name}<small>${sub ? sub + " · " : ""}${rows.length} 段</small></h2>`;
     html += rows.map(it => {
       const n = it.kind === "exam" ? it.lines.length / 2 + " 问" : it.lines.length + " 句";
-      return `<button class="card glass" type="button" data-open="${it.id}"><div><div class="t">${esc(it.title)}</div><div class="m">${n}${it.qa.length ? " · 带问答 " + it.qa.length + " 题" : ""}</div></div><div class="go">${store.done[it.id] ? '<span class="done">✓ 听过</span>' : ""}<span class="pbtn">${IC.play}</span></div></button>`;
+      return `<div class="card glass"><button class="cmain" type="button" data-open="${it.id}"><div class="t">${esc(it.title)}</div><div class="m">${n}${it.qa.length ? " · 带问答 " + it.qa.length + " 题" : ""}</div></button><div class="go">${store.done[it.id] ? '<span class="done">✓ 听过</span>' : ""}<a class="wgo" href="index.html#walk/item/${it.id}" title="不看屏幕听：念印尼语 → 停顿 → 念中文">${IC.hp}随身听</a><button class="pbtn" type="button" data-open="${it.id}" aria-label="精听这一组">${IC.play}</button></div></div>`;
     }).join("");
   }
   $("#list").innerHTML = html;
