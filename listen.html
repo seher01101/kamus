@@ -154,6 +154,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .ctl svg{width:18px;height:18px}
 .ctl.main{width:48px;height:48px;color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent);box-shadow:none}
 .ctl.main svg{width:19px;height:19px}
+.ctl.main.busy{animation:busy 1s ease-in-out infinite}
+@keyframes busy{50%{opacity:.45;transform:scale(.92)}}
 .ctl.side{width:52px;height:38px;border-radius:99px;font:inherit;font-size:13px;font-weight:600;font-family:var(--cjk);background:transparent;color:var(--ink-soft)}
 .ctl.side[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .ctl .pop{display:grid;place-items:center;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
@@ -361,6 +363,7 @@ function openItem(id, autoplay) {
     cur.qa.forEach((q, i) => { queue.push({ a: q.qa, k: "Q" + i, role: "q", id: q.q }); queue.push({ a: q.aa, k: "A" + i, role: "a", id: q.a }); });
   }
   $("#detail").innerHTML = html;
+  prefetchAround(0);
   $("#home").hidden = true; $("#detail").hidden = false; $("#player").hidden = false;
   document.querySelectorAll(".seg").forEach(x => x.hidden = true);
   window.scrollTo({ top: 0 });
@@ -421,17 +424,32 @@ function playLine(i) {
   qi = i; const q = queue[i]; if (!q) return finish();
   played.add(i); steps = stepsFor(i); si = 0;
   document.querySelectorAll(".count").forEach(c => c.remove());
-  mark(q.k); updPos(); meta(q); runStep();
+  mark(q.k); updPos(); meta(q); prefetchAround(i); runStep();
 }
 const playClip = playLine;
+// 音频先下载到本机内存（blob），播放时不用再等网络；当前句 + 后面两句提前下
+const BLOB = new Map(), LOADING = new Map();
+function prefetch(a) {
+  if (!a || BLOB.has(a) || LOADING.has(a)) return LOADING.get(a);
+  const p = fetch("audio/" + a + ".mp3").then(r => { if (!r.ok) throw 0; return r.blob(); })
+    .then(b => { BLOB.set(a, URL.createObjectURL(b)); if (BLOB.size > 60) { const [k, u] = BLOB.entries().next().value; URL.revokeObjectURL(u); BLOB.delete(k); } })
+    .catch(() => {}).finally(() => LOADING.delete(a));
+  LOADING.set(a, p); return p;
+}
+function prefetchAround(i) { for (let j = i; j <= i + 2 && j < queue.length; j++) { prefetch(queue[j].a); if (zhm !== "off") prefetch(queue[j].za); } }
+let retried = false;
 function runStep() {
   if (!playing) return;
   const st = steps[si]; if (!st) return lineDone();
-  au.src = st.g ? silentUrl(st.g) : "audio/" + st.a + ".mp3";
-  au.playbackRate = st.g ? 1 : st.r;
+  au.src = st.g ? silentUrl(st.g) : BLOB.get(st.a) || "audio/" + st.a + ".mp3";
+  au.defaultPlaybackRate = au.playbackRate = st.g ? 1 : st.r;   // iOS 换音频后会把速度重置成 defaultPlaybackRate
   if (st.cd) countdown(queue[qi].k, st.g);
-  au.play().catch(() => { playing = false; updPos(); });
+  if (!st.g && !BLOB.has(st.a)) $("#play").classList.add("busy");   // 还在下载：播放键呼吸，别以为没反应
+  const p = au.play();
+  // 换下一段音频时，上一段的 play() 会被浏览器取消（AbortError）——那不是停止，别把按钮改回 ▶
+  if (p) p.catch(e => { if (e && e.name === "AbortError") return; playing = false; $("#play").classList.remove("busy"); updPos(); });
 }
+au.addEventListener("playing", () => { $("#play").classList.remove("busy"); if (playing) updPos(); });
 function lineDone() {
   const q = queue[qi];
   if (mode === "one") return playLine(qi);
@@ -444,15 +462,20 @@ function lineDone() {
   playLine(nx);
 }
 function playFrom(i) { playing = true; played = new Set(); playLine(i); }
-function stop() { playing = false; au.pause(); document.querySelectorAll(".count").forEach(c => c.remove()); updPos(); }
+function stop() { playing = false; au.pause(); $("#play").classList.remove("busy"); document.querySelectorAll(".count").forEach(c => c.remove()); updPos(); }
 function finish() {
   playing = false; updPos();
   if (cur) { store.done[cur.id] = 1; save(); }
   if (chain) { const n = chain[chain.indexOf(cur.id) + 1]; if (n) { const c = chain; openItem(n, true); chain = c; toast("下一组 · " + cur.title); } else { chain = null; toast("这一组全部播完了 🎉"); } return; }
   if (mode === "next") jumpItem(1, true);
 }
-au.addEventListener("ended", () => { if (!playing) return; if (steps[si] && steps[si].cd) document.querySelectorAll(".count").forEach(c => c.remove()); si++; runStep(); });
-au.addEventListener("error", () => { if (!playing) return; si++; runStep(); });
+au.addEventListener("ended", () => { retried = false; if (!playing) return; if (steps[si] && steps[si].cd) document.querySelectorAll(".count").forEach(c => c.remove()); si++; runStep(); });
+au.addEventListener("error", () => {               // 网络没下下来：同一段重试一次，再不行才跳过
+  if (!playing) return;
+  const st = steps[si];
+  if (st && !st.g && !retried) { retried = true; prefetch(st.a); setTimeout(runStep, 600); return; }
+  retried = false; si++; runStep();
+});
 function countdown(k, ms) {
   const el = document.querySelector(`.ln[data-k="${k}"] .sp`) || document.querySelector(`.ln[data-k="${k}"] .id`);
   if (!el) return;

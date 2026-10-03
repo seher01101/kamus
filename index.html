@@ -1050,7 +1050,7 @@ function walkStep() {
   au.onerror = () => { W.si++; walkStep(); };
   au.src = st.g ? silentUrl(st.g) : "audio/" + st.a + ".mp3";
   au.playbackRate = st.g ? 1 : st.r;
-  au.play().catch(() => { W.on = false; walkDraw(); });
+  au.play().catch(e => { if (e && e.name === "AbortError") return; W.on = false; walkDraw(); });   // 换下一段时被取消不算停止
   const prev = W.steps[W.si - 1];
   if (!prev || prev.k !== st.k || st.think || (prev && prev.think)) walkDraw(false);
 }
