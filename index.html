@@ -370,6 +370,7 @@ textarea.din{min-height:96px;font-size:19px;resize:vertical}
 :root[data-theme="dark"] .in.lg,:root[data-theme="dark"] .wbar.lg{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02))!important}
 @media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.modes{grid-template-columns:1fr}.word{font-size:34px}}
 .pos{display:inline-block;font-size:11px;font-weight:500;color:var(--muted);border:1px solid rgba(60,60,67,.18);border-radius:6px;padding:0 6px;margin-right:8px;vertical-align:3px;line-height:18px}
+.pos i{font-style:italic;font-family:Georgia,serif;margin-left:2px}
 
 body::before{background:
   radial-gradient(900px 720px at -5% -8%,rgba(91,141,255,.10),transparent 62%),
@@ -697,7 +698,8 @@ const ICON = {
 let Q = [], qi = 0, sessStat = { ok: 0, no: 0 };
 const POSN = { 名: "名词", 动: "动词", 形: "形容词", 副: "副词", 代: "代词", 数: "数词", 量: "量词", 介: "介词", 连: "连词", 叹: "叹词", 助: "助词", 疑: "疑问词" };
 const POSID = { 名: "nomina (kata benda)", 动: "verba (kata kerja)", 形: "adjektiva (kata sifat)", 副: "adverbia (kata keterangan)", 代: "pronomina (kata ganti)", 数: "numeralia (kata bilangan)", 量: "kata penggolong", 介: "preposisi (kata depan)", 连: "konjungsi (kata sambung)", 叹: "interjeksi (kata seru)", 助: "partikel", 疑: "kata tanya" };
-const posTag = p => p ? `<span class="pos" title="${p.split("/").map(x => POSID[x] || "").join(" / ")}">${p.split("/").map(x => POSN[x] || x).join(" · ")}</span>` : "";
+const POSAB = { 名: "n", 动: "v", 形: "adj", 副: "adv", 代: "pron", 数: "num", 量: "kl", 介: "prep", 连: "konj", 叹: "interj", 助: "part", 疑: "pron" };   // 印尼语语法里的缩写
+const posTag = p => p ? `<span class="pos" title="${p.split("/").map(x => POSID[x] || "").join(" / ")}">${p.split("/").map(x => (POSN[x] || x) + (POSAB[x] ? " <i>" + POSAB[x] + "</i>" : "")).join(" · ")}</span>` : "";
 const WALKCARD = () => `<a class="walkcard glass" href="#walk"><span class="ic">${ICON.walk}</span><span><b>单词随身听</b><small>念单词，再念中文 · 今天学的 / 已学的 / 我的收藏 / 词书随机 · 锁屏也能听</small></span><span class="go">开始 ›</span></a>`;
 function wordsHome() {
   const d = day();

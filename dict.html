@@ -110,6 +110,7 @@ h1 small{font-family:var(--font-body);font-size:10.5px;font-weight:500;color:var
 .freq{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
 .mean{font-family:var(--cjk);font-size:18px;font-weight:600;margin-top:6px;overflow-wrap:anywhere}
 .pos{display:inline-block;font-size:11px;font-weight:500;color:var(--muted);border:1px solid var(--line, rgba(60,60,67,.18));border-radius:6px;padding:0 6px;margin-right:8px;vertical-align:3px;line-height:18px;cursor:help}
+.pos i{font-style:italic;font-family:Georgia,serif;margin-left:2px}
 .note{font-size:13.5px;color:var(--ink-soft);margin-top:3px;overflow-wrap:anywhere}
 .phr{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .phr button{font:inherit;font-size:13px;background:var(--accent-soft);border:0;color:var(--accent);border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:500}
@@ -311,7 +312,8 @@ function entryHTML(e, hitWord) {
 
 const POSN = { 名: "名词", 动: "动词", 形: "形容词", 副: "副词", 代: "代词", 数: "数词", 量: "量词", 介: "介词", 连: "连词", 叹: "叹词", 助: "助词", 疑: "疑问词" };
 const POSID = { 名: "nomina (kata benda)", 动: "verba (kata kerja)", 形: "adjektiva (kata sifat)", 副: "adverbia (kata keterangan)", 代: "pronomina (kata ganti)", 数: "numeralia (kata bilangan)", 量: "kata penggolong", 介: "preposisi (kata depan)", 连: "konjungsi (kata sambung)", 叹: "interjeksi (kata seru)", 助: "partikel", 疑: "kata tanya" };
-const posTag = p => p ? `<span class="pos" title="${p.split("/").map(x => POSID[x] || "").join(" / ")}">${p.split("/").map(x => POSN[x] || x).join(" · ")}</span>` : "";
+const POSAB = { 名: "n", 动: "v", 形: "adj", 副: "adv", 代: "pron", 数: "num", 量: "kl", 介: "prep", 连: "konj", 叹: "interj", 助: "part", 疑: "pron" };   // 印尼语语法里的缩写
+const posTag = p => p ? `<span class="pos" title="${p.split("/").map(x => POSID[x] || "").join(" / ")}">${p.split("/").map(x => (POSN[x] || x) + (POSAB[x] ? " <i>" + POSAB[x] + "</i>" : "")).join(" · ")}</span>` : "";
 // --- search
 const STRIP = [
   [/^meny/, "s"], [/^meng/, ""], [/^meng/, "k"], [/^mem/, "p"], [/^mem/, ""], [/^men/, "t"], [/^men/, ""], [/^me/, ""],
