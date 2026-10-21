@@ -108,6 +108,27 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .dh h2{font-family:var(--cjk);font-size:21px;margin:4px 0 2px}
 .dh .m{font-size:12.5px;color:var(--muted)}
 .opts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+/* 详情页头：一行标题 + 一排设置药丸 */
+.dh2{display:flex;align-items:center;gap:8px;margin:0 2px 8px}
+.dh2 .back{font-size:26px;line-height:1;padding:0 10px 3px 2px;font-weight:400}
+.dh2 h2{flex:1;min-width:0;margin:0;font-family:var(--cjk);font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 12px;margin:0 -2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12.5px;font-weight:500;font-family:var(--cjk);white-space:nowrap;cursor:pointer;
+  color:var(--ink-soft);background:var(--glass);border:1px solid var(--glass-border);border-radius:99px;padding:6px 9px;-webkit-tap-highlight-color:transparent;
+  transition:background .25s,color .25s,transform .3s cubic-bezier(.34,1.56,.64,1),border-color .25s}
+.chip:active{transform:scale(.95)}
+.chip[aria-pressed="true"],.chip[aria-expanded="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:transparent;font-weight:600}
+.chip[aria-pressed="false"]{opacity:.55;text-decoration:line-through}
+.chip.dd::after{content:"";width:6px;height:6px;border-right:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg);margin:-3px 0 0 1px;transition:transform .3s}
+.chip.dd[aria-expanded="true"]::after{transform:rotate(-135deg);margin-top:3px}
+.pscrim{position:fixed;inset:0;z-index:60;background:transparent}
+.pmenu{position:fixed;z-index:61;border-radius:22px;padding:6px;opacity:0;transform:translateY(-10px) scale(.55);pointer-events:none;filter:blur(4px);
+  transition:transform .42s cubic-bezier(.32,1.4,.6,1),opacity .22s,filter .3s}
+.pmenu.open{opacity:1;transform:none;pointer-events:auto;filter:none}
+.pmenu .h{font-size:11.5px;color:var(--muted);padding:6px 12px 4px;font-family:var(--cjk)}
+.pmenu .mi{grid-template-columns:1fr 18px}
+.pmenu.open .mi{animation:miIn .45s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i) * 40ms + 60ms)}
 .tog{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--glass-border);background:var(--glass);color:var(--ink-soft);border-radius:99px;padding:5px 12px;cursor:pointer}
 .tog[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .lines{display:grid;gap:8px}
@@ -306,6 +327,45 @@ store.done = store.done || {};
 let kind = store.kind || "exam", book = store.book || "", showId = !!store.showId, showZh = !!store.showZh, pause = store.pause || 6;
 let zhm = store.zhm || "off", rep = store.rep || 1, gapK = store.gap || "m";      // 怎么念 / 念几遍 / 停顿
 const pnote = () => ({ zo: "只念中文，留时间让你自己说出印尼语（练中译印，不放答案；想对答案选「中文 → 印尼语」）", zi: "先听中文，自己说出印尼语，再听正确说法（练中译印）", iz: "先听印尼语，自己想意思，再听中文对答案" }[zhm] || "只念印尼语；要中文提示就选其他几种");
+// 设置小药丸：怎么念 / 念几遍 / 停顿，点开是和左下角播放模式一样的弹出菜单
+const POPS = {
+  zhm: { h: "怎么念", get: () => zhm, set: v => { zhm = v; store.zhm = v; },
+    opts: [["off", "只念印尼语", "不放中文"], ["zo", "只念中文", "留时间让你自己说印尼语，不放答案"], ["iz", "印尼语 → 中文", "先听印尼语，自己想意思，再听中文"], ["zi", "中文 → 印尼语", "先听中文，自己说印尼语，再听正确说法"]] },
+  rep: { h: "印尼语念几遍", get: () => rep, set: v => { rep = +v; store.rep = rep; }, opts: [[1, "念 1 遍", ""], [2, "念 2 遍", ""], [3, "念 3 遍", ""]] },
+  gap: { h: "停顿", get: () => gapK, set: v => { gapK = v; store.gap = v; }, opts: [["s", "短", "停顿时间短"], ["m", "中", ""], ["l", "长", "停顿时间长，适合慢慢想"]] },
+};
+const SHORT = { off: "只印尼语", zo: "只中文", iz: "印→中", zi: "中→印" };      // 药丸上的短写法，菜单里是全称
+const chipLabel = k => { const o = POPS[k].opts.find(x => String(x[0]) === String(POPS[k].get())) || POPS[k].opts[0]; return k === "gap" ? "停顿 " + o[1] : k === "rep" ? o[0] + " 遍" : SHORT[o[0]]; };
+let popEl = null, popScrim = null;
+function closePop() {
+  document.querySelectorAll(".chip[aria-expanded]").forEach(c => c.setAttribute("aria-expanded", "false"));
+  if (!popEl) return;
+  const e = popEl, s = popScrim; popEl = popScrim = null;
+  e.classList.remove("open"); s.remove(); setTimeout(() => e.remove(), 280);
+}
+function openPop(btn) {
+  const k = btn.dataset.pop, P = POPS[k];
+  if (popEl) { const same = popEl.dataset.k === k; closePop(); if (same) return; }
+  popScrim = document.createElement("div"); popScrim.className = "pscrim"; popScrim.addEventListener("click", closePop); document.body.appendChild(popScrim);
+  popEl = document.createElement("div"); popEl.className = "pmenu glass"; popEl.dataset.k = k;
+  popEl.innerHTML = `<div class="h">${P.h}</div>` + P.opts.map(([v, n, d], i) =>
+    `<button class="mi" type="button" style="--i:${i}" data-pv="${v}" aria-checked="${String(v) === String(P.get())}"><span><b>${n}</b>${d ? `<small>${d}</small>` : ""}</span><svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join("");
+  const r = btn.getBoundingClientRect(), W = 244, left = Math.max(12, Math.min(r.left, innerWidth - W - 12));
+  popEl.style.cssText = `left:${left}px;top:${r.bottom + 8}px;width:${W}px;transform-origin:${Math.max(14, r.left - left + r.width / 2)}px 0`;
+  popEl.addEventListener("click", e => {
+    const b = e.target.closest("[data-pv]"); if (!b) return;
+    P.set(b.dataset.pv);
+    popEl.querySelectorAll(".mi").forEach(x => x.setAttribute("aria-checked", x === b));
+    btn.textContent = chipLabel(k);
+    const rc = document.querySelector('[data-pop="rep"]'); if (rc) rc.hidden = zhm === "zo";
+    save();
+    if (playing && qi >= 0) { steps = stepsFor(qi); si = Math.min(si, steps.length - 1); }
+    setTimeout(closePop, 180);
+  });
+  document.body.appendChild(popEl); btn.setAttribute("aria-expanded", "true");
+  requestAnimationFrame(() => popEl && popEl.classList.add("open"));
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
 const GAPS = { s: [500, 700], m: [1100, 1500], l: [2200, 3000] };                     // [两种语言之间, 句与句之间]
 
 function setSeg(sel, attr, val) { document.querySelectorAll(sel + " button").forEach(b => b.setAttribute("aria-pressed", b.dataset[attr] === val)); }
@@ -358,19 +418,16 @@ function openItem(id, autoplay) {
   cur = DATA.find(x => x.id === id); if (!cur) return;
   stop();
   queue = cur.lines.map((l, i) => ({ a: l.a, za: l.za || "", k: "L" + i, role: l.role, id: l.id }));
-  let html = `<button class="back" type="button" data-back>‹ 返回列表</button>
-  <div class="dh"><span class="book ${bookCls(cur.book)}">${cur.book === "真题录音" ? "原题" : esc(cur.book)}</span><h2>${esc(cur.title)}</h2><div class="m">${HINT[cur.kind].replace(/<[^>]+>/g, "")}</div></div>
-  <div class="opts">
-    <button class="tog" type="button" data-opt="id" aria-pressed="${showId}">显示印尼语</button>
-    <button class="tog" type="button" data-opt="zh" aria-pressed="${showZh}">显示中文</button>
-    ${cur.kind === "exam" ? `<button class="tog" type="button" data-opt="pause" aria-pressed="true">答题停顿 ${pause} 秒</button>` : ""}
+  closePop();
+  let html = `<div class="dh2"><button class="back" type="button" data-back aria-label="返回列表">‹</button><h2>${esc(cur.title)}</h2><span class="book ${bookCls(cur.book)}">${cur.book === "真题录音" ? "原题" : esc(cur.book)}</span></div>
+  <div class="chips">
+    <button class="chip" type="button" data-opt="id" aria-pressed="${showId}" title="显示/隐藏印尼语">印尼语</button>
+    <button class="chip" type="button" data-opt="zh" aria-pressed="${showZh}" title="显示/隐藏中文">中文</button>
+    ${cur.kind === "exam" ? `<button class="chip" type="button" data-opt="pause">停顿 ${pause} 秒</button>` : `
+    <button class="chip dd" type="button" data-pop="zhm" aria-haspopup="menu" aria-expanded="false">${chipLabel("zhm")}</button>
+    <button class="chip dd" type="button" data-pop="rep" aria-haspopup="menu" aria-expanded="false"${zhm === "zo" ? " hidden" : ""}>${chipLabel("rep")}</button>
+    <button class="chip dd" type="button" data-pop="gap" aria-haspopup="menu" aria-expanded="false">${chipLabel("gap")}</button>`}
   </div>
-  ${cur.kind === "exam" ? "" : `<div class="pset glass ${zhm === "zo" ? "zo" : ""}">
-    <div class="r"><span>怎么念</span><div class="ch" data-pset="zhm">${[["off", "只念印尼语"], ["zo", "只念中文"], ["iz", "印尼语 → 中文"], ["zi", "中文 → 印尼语"]].map(([v, n]) => `<button type="button" data-v="${v}" aria-pressed="${zhm === v}">${n}</button>`).join("")}</div></div>
-    <div class="r rrep"><span>印尼语念几遍</span><div class="ch" data-pset="rep">${[1, 2, 3].map(v => `<button type="button" data-v="${v}" aria-pressed="${rep === v}">${v}</button>`).join("")}</div></div>
-    <div class="r"><span>停顿</span><div class="ch" data-pset="gap">${[["s", "短"], ["m", "中"], ["l", "长"]].map(([v, n]) => `<button type="button" data-v="${v}" aria-pressed="${gapK === v}">${n}</button>`).join("")}</div></div>
-    <p class="pnote">${pnote()}</p>
-  </div>`}
   <div class="lines">${cur.lines.map((l, i) => lineHTML(l, "L" + i)).join("")}</div>`;
   if (cur.zh && cur.kind !== "text" && cur.kind !== "culture") html += `<div class="para glass"><b>中文翻译</b><div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(cur.zh)}</div></div>`;
   if (cur.note) html += `<p class="note">${esc(cur.note)}</p>`;
@@ -524,15 +581,8 @@ document.addEventListener("click", ev => {
   const o = t.closest("[data-open]"); if (o) { chain = null; return openItem(o.dataset.open, true); }
   const gp = t.closest("[data-gplay]");
   if (gp) { const ids = rowsOf(kind, gp.dataset.gplay).map(x => x.id); openItem(ids[0], true); chain = ids; toast("全部连播 · 共 " + ids.length + " 组"); return; }
-  const ps = t.closest("[data-pset] button");
-  if (ps) {
-    const g = ps.parentElement.dataset.pset, v = ps.dataset.v;
-    if (g === "zhm") { zhm = v; store.zhm = v; $(".pset").classList.toggle("zo", v === "zo"); } if (g === "rep") { rep = +v; store.rep = rep; } if (g === "gap") { gapK = v; store.gap = v; }
-    save(); ps.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === ps));
-    const note = $(".pnote"); if (note) note.textContent = pnote();
-    if (playing && qi >= 0) { const k = steps[si]; steps = stepsFor(qi); si = Math.min(si, steps.length - 1); }
-    return;
-  }
+  const pp = t.closest("[data-pop]");
+  if (pp) { openPop(pp); return; }
   if (t.closest("[data-back]")) return back();
   // 整个句子框都能点读；框里的单词链接仍然去词典，被模糊的文字点一下是显示文字（不播放）
   const anb = t.closest("[data-ana]");
@@ -546,7 +596,7 @@ document.addEventListener("click", ev => {
     const v = opt.dataset.opt;
     if (v === "id") { showId = !showId; store.showId = showId; opt.setAttribute("aria-pressed", showId); document.querySelectorAll(".id").forEach(e => e.classList.toggle("hid", !showId)); }
     if (v === "zh") { showZh = !showZh; store.showZh = showZh; opt.setAttribute("aria-pressed", showZh); document.querySelectorAll(".zh").forEach(e => e.classList.toggle("hid", !showZh)); }
-    if (v === "pause") { pause = pause >= 12 ? 3 : pause + 3; store.pause = pause; opt.textContent = `答题停顿 ${pause} 秒`; }
+    if (v === "pause") { pause = pause >= 12 ? 3 : pause + 3; store.pause = pause; opt.textContent = `停顿 ${pause} 秒`; }
     save(); return;
   }
   const rev = t.closest("[data-rev].hid");
