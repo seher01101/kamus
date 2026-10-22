@@ -214,20 +214,6 @@ body::before{background:
         <input id="q" type="search" placeholder="搜印尼语或中文，如 membersihkan / 打扫" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="搜索单词">
         <button id="clear" type="button" aria-label="清空" hidden>✕</button>
       </div>
-      <div class="filters" role="group" aria-label="类型">
-        <button class="chip" data-f="all" aria-pressed="true" type="button">全部</button>
-        <button class="chip" data-f="word" aria-pressed="false" type="button">单词</button>
-        <button class="chip" data-f="phrase" aria-pressed="false" type="button">词组</button>
-        <button class="chip" data-f="affix" aria-pressed="false" type="button">前后缀</button>
-        <button class="chip" data-f="freq" aria-pressed="false" type="button">高频优先</button>
-      </div>
-      <div class="filters srcf" role="group" aria-label="来源">
-        <button class="chip" data-s="" aria-pressed="true" type="button">全部来源</button>
-        <button class="chip" data-s="武功秘籍" aria-pressed="false" type="button">武功秘籍</button>
-        <button class="chip" data-s="BIPA 1" aria-pressed="false" type="button">BIPA 1</button>
-        <button class="chip" data-s="Daring" aria-pressed="false" type="button">Daring</button>
-        <button class="chip" data-s="BIPA 2" aria-pressed="false" type="button">BIPA 2</button>
-      </div>
       <div class="az" id="az" aria-label="字母跳转"></div>
     </div>
   </div>
@@ -466,14 +452,6 @@ function setChips() {
   document.querySelectorAll(".chip[data-f]").forEach(c => c.setAttribute("aria-pressed", c.dataset.f === filter));
   document.querySelectorAll(".chip[data-s]").forEach(c => c.setAttribute("aria-pressed", c.dataset.s === sfilter));
 }
-document.querySelector(".srcf").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-s]"); if (!b) return;
-  sfilter = b.dataset.s; setChips(); render();
-});
-document.querySelector(".filters").addEventListener("click", ev => {
-  const f = ev.target.dataset.f; if (!f) return;
-  filter = f; setChips(); render();
-});
 
 let timer;
 q.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 90); });
