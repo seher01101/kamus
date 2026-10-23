@@ -415,7 +415,7 @@ function reviewDay(d) {
     return `<div class="it glass"><div class="q"><span class="n">${k + 1}</span><button class="sp" type="button" data-p="${sec}|${id}" aria-label="听原题">${IC.play}</button><span>${esc(textOf(sec, id))}${c && c.g ? `<span class="g ${c.g}">${GN[c.g]}</span>` : ""}</span></div>
       <div class="kv"><span class="k">你说的</span>${a ? esc(a.t) + (a.pk ? ' <small class="sub">（看过文字）</small>' : "") : c && c.ans ? esc(c.ans) : '<span class="sub">没答</span>'}</div>
       ${c ? `<div class="kv"><span class="k">改好的</span><span class="fix">${rich(c.fix)}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(c.fix.replace(/\*\*/g, ""))}" data-l="${fixLang}" aria-label="读改好的句子">${IC.play}</button></div>
-        ${c.note ? `<div class="kv"><span class="k">改了什么</span>${esc(c.note)}</div>` : ""}${c.words ? `<div class="kv"><span class="k">生词</span>${esc(c.words)}</div>` : ""}${c.up ? `<div class="kv"><span class="k">升级版</span>${esc(c.up)}</div>` : ""}${c.ext ? `<div class="kv"><span class="k">扩充</span>${esc(c.ext)}</div>` : ""}` : ""}
+        ${c.note ? `<div class="kv"><span class="k">改了什么</span>${esc(c.note)}</div>` : ""}${c.words ? `<div class="kv"><span class="k">生词</span>${esc(c.words)}</div>` : ""}${c.pat ? `<div class="kv"><span class="k">句型</span>${esc(c.pat)}</div>` : ""}${c.up ? `<div class="kv"><span class="k">升级版</span>${esc(c.up)}</div>` : ""}${c.ext ? `<div class="kv"><span class="k">扩充</span>${esc(c.ext)}</div>` : ""}` : ""}
     </div>`;
   };
   const com = (K.common || {})[d];
