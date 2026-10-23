@@ -233,7 +233,9 @@ function compute(d) {
   return out;
 }
 function daySet(d) {
-  if (!S.fs[d]) { S.fs[d] = K.sets && K.sets[d] ? JSON.parse(JSON.stringify(K.sets[d])) : compute(d); save(); }
+  const ks = K.sets && K.sets[d], started = Object.keys(S.ans[d] || {}).length;
+  if (ks && !started && JSON.stringify(S.fs[d]) !== JSON.stringify(ks)) { S.fs[d] = JSON.parse(JSON.stringify(ks)); save(); }   // cc 排的题优先（还没开始答的话）
+  if (!S.fs[d]) { S.fs[d] = compute(d); save(); }
   return S.fs[d];
 }
 const itemId = (sec, id) => sec === "qa" ? id : id + sec;
@@ -297,6 +299,7 @@ function home() {
   const d = today(), set = daySet(d);
   const card = sec => {
     const n = set[sec].length, c = count(d, sec), done = n && c >= n;
+    if (!n) return `<div class="task glass done"><span class="ic">${SEC[sec].ic}</span><span><b>${SEC[sec].name}</b><small>今天不用做</small></span><span class="go">✓</span></div>`;
     const first = set[sec].findIndex(id => !ansOf(d, sec, id));
     return `<a class="task glass${done ? " done" : ""}" href="#do/${sec}/${first < 0 ? 0 : first}"><span class="ic">${SEC[sec].ic}</span>
       <span><b>${SEC[sec].name}</b><small>${SEC[sec].sub}</small><span class="mini"><i style="width:${n ? c / n * 100 : 0}%"></i></span></span>
