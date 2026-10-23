@@ -380,7 +380,8 @@ function reviewList() {
   const days = [...new Set([...Object.keys(S.ans), ...Object.keys(K.corr || {})])].sort().reverse();
   $("#app").innerHTML = `<div class="top"><div><h1>复盘</h1><p class="sub">看自己说了什么、哪里要改</p></div>${tabs("review")}</div>
   ${days.length ? days.map(d => {
-    const n = Object.keys(S.ans[d] || {}).length, ok = K.corr && K.corr[d];
+    const C = (K.corr || {})[d] || {}, ok = Object.keys(C).length;
+    const n = new Set([...Object.keys(S.ans[d] || {}), ...Object.keys(C).filter(k => C[k].ans)]).size;   // Excel 做的那天，答案在批改里
     return `<a class="day glass" href="#review/${d}"><span><b>${d}</b><br><small class="sub">答了 ${n} 题</small></span><span class="badge ${ok ? "ok" : "wait"}">${ok ? "已批改" : "等批改"}</span></a>`;
   }).join("") : '<p class="empty">还没有练习记录。</p>'}`;
 }
