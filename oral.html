@@ -99,10 +99,16 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .said{min-height:52px;margin-top:16px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--surface-2) 45%,transparent);font-size:15.5px;color:var(--ink-soft)}
 .said .im{color:var(--muted)}
 .said .ph{color:var(--muted);font-family:var(--cjk);font-size:13.5px}
-.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-.tl{font:inherit;font-size:13.5px;border:1px solid var(--glass-border);background:var(--surface);color:var(--ink-soft);border-radius:99px;padding:6px 14px;cursor:pointer;font-family:var(--cjk)}
-.reveal{margin-top:12px;padding:12px 14px;border-radius:14px;border:1px dashed var(--line);font-size:16px}
-textarea{width:100%;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--ink);min-height:70px;margin-top:10px}
+.hintbtn{font:inherit;font-size:13px;border:0;background:none;color:var(--prac);cursor:pointer;font-family:var(--cjk);padding:4px 8px;border-radius:8px}
+.reveal{margin-top:8px;padding:12px 14px;border-radius:14px;border:1px dashed var(--line);font-size:16px;text-align:center;max-width:100%}
+.mic.wait{background:var(--muted);box-shadow:none}
+.said textarea{display:block;width:100%;font:inherit;font-size:15.5px;border:0;outline:0;background:transparent;color:var(--ink);min-height:44px;resize:none;padding:0}
+.sact{display:flex;justify-content:flex-end;gap:6px;margin-top:6px;min-height:30px}
+.sbtn{font:inherit;font-size:14.5px;border:0;background:none;color:var(--ink-soft);cursor:pointer;font-family:var(--cjk);padding:9px 14px;border-radius:10px;display:inline-flex;align-items:center;gap:5px}
+.sbtn svg{width:16px;height:16px}
+.sbtn:active{background:var(--surface-2)}
+.w{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
+.hid .w{pointer-events:none}
 .navr{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
 /* 复盘 */
 .day{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:16px;padding:14px 16px;text-decoration:none;color:inherit;margin-top:8px}
@@ -154,6 +160,8 @@ const QA = Object.fromEntries(D.qa.map(x => [x.id, x])), TR = Object.fromEntries
 const IC = {
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
   stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>',
 };
 const SEC = {
@@ -325,61 +333,97 @@ function doPage(sec, i) {
   if (!SEC[sec] || !list) return home();
   if (i >= list.length) return secDone(sec);
   const id = list[i], key = itemId(sec, id), isRev = (set.rv || []).includes(key);
-  let txt = ansOf(d, sec, id), typing = false, shown = false;
+  let txt = ansOf(d, sec, id), shown = false, editing = false;
+  // 一道题只有三块：①题（听；没听清就看文字）②你的回答（说；识别结果就在下面，重说/改字紧挨着它）③上一题/下一题
   $("#app").innerHTML = `<div class="top"><div><a href="#" class="sub" style="text-decoration:none">‹ 口语练习</a><h1>${SEC[sec].name}</h1></div></div>
   <div class="card glass">
     <div class="prog"><span>${i + 1} / ${list.length}</span><div class="bar"><i style="width:${i / list.length * 100}%"></i></div>${isRev ? '<span class="tag">复习</span>' : ""}</div>
     <div class="stage"><button class="play" id="pl" type="button" aria-label="听">${IC.play}</button><div class="lab">${sec === "z" ? "听中文" : sec === "i" ? "听印尼语" : "听考官提问"}</div>
-      <button class="mic" id="mc" type="button" aria-label="开始说">${IC.mic}</button><div class="lab" id="ml">${SR ? "点一下开始说，说完再点一下" : "这个浏览器不能语音识别，请点「打字」"}</div></div>
+      <button class="hintbtn" id="sh" type="button">没听清？看文字</button><div id="rv"></div>
+      <button class="mic" id="mc" type="button" aria-label="开始说">${IC.mic}</button><div class="lab" id="ml"></div></div>
     <div class="said" id="sd"></div>
-    <div id="ty"></div>
-    <div class="tools"><button class="tl" id="rs" type="button">重说</button><button class="tl" id="tp" type="button">打字</button><button class="tl" id="sh" type="button">看文字</button></div>
-    <div id="rv"></div>
+    <div class="sact" id="sa"></div>
     <div class="navr"><button class="btn ghost" id="pv" type="button" ${i ? "" : "disabled"}>‹ 上一题</button><button class="btn" id="nx" type="button">${i + 1 < list.length ? "下一题 ›" : "完成"}</button></div>
   </div>`;
-  const show = (fin, im) => { $("#sd").innerHTML = fin || im ? `${esc(fin)} <span class="im">${esc(im || "")}</span>` : `<span class="ph">${sec === "i" ? "说中文" : "说印尼语"}。说的内容会显示在这里。</span>`; };
+  const ph = sec === "i" ? "说中文" : "说印尼语";
+  const hint = () => { $("#ml").textContent = !SR ? "这个浏览器不能语音识别，请直接在下面打字" : txt ? "说错了点「重说」；想补充，再点一下话筒接着说" : "点一下话筒，等它变红再开口"; };
+  const show = (fin, im) => {
+    if (editing) return;
+    $("#sd").innerHTML = fin || im ? `${esc(fin)} <span class="im">${esc(im || "")}</span>` : `<span class="ph">${SR ? ph + "。识别出的文字会显示在这里，点文字可以直接改" : ph + "：点这里打字，或用键盘上的麦克风说"}</span>`;
+  };
   const commit = t => {
     txt = t.trim();
     const a = (S.ans[d] = S.ans[d] || {}), old = a[key] || {};
     if (txt) a[key] = { t: txt, ts: Date.now(), pk: old.pk || (shown ? 1 : 0), n: (old.n || 0) + 1 }; else delete a[key];
     save();
   };
-  show(txt);
-  $("#pl").onclick = () => playItem(sec, id, $("#pl"));
-  $("#mc").onclick = () => {
-    if (!SR) return;
+  const acts = () => {
+    $("#sa").innerHTML = txt && !editing && !rec ? `<button class="sbtn" id="rs" type="button">${IC.redo}重说</button><button class="sbtn" id="ed" type="button">${IC.edit}改字</button>` : "";
+    if ($("#rs")) $("#rs").onclick = () => { commit(""); show(""); acts(); hint(); listen(); };
+    if ($("#ed")) $("#ed").onclick = edit;
+  };
+  function edit() {                                     // 识别错了 / 不能识别：文字框就在原处，直接改
+    stopRec(); editing = true; stopAudio();
+    $("#sd").innerHTML = `<textarea id="ta" rows="2" placeholder="${ph}">${esc(txt)}</textarea>`;
+    const ta = $("#ta"); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }; fit();
+    ta.oninput = () => { fit(); commit(ta.value); };
+    const done = () => { editing = false; show(txt); acts(); hint(); };
+    ta.onblur = () => { if (SR) done(); };
+    $("#sa").innerHTML = SR ? `<button class="sbtn" id="ok" type="button">完成</button>` : "";
+    if ($("#ok")) { $("#ok").onmousedown = e => e.preventDefault(); $("#ok").onclick = done; }
+  }
+  // ---- 听写：非连续模式（说完一句自动停，不会出现 buku buku 这种重复）；停下时还没转成正式结果的“临时结果”也要收下
+  function listen() {
+    if (!SR) return edit();
     if (rec) return stopRec();
-    stopAudio();
-    const base = txt;
-    let fin = base;
-    rec = new SR(); rec.lang = SEC[sec].lang; rec.continuous = true; rec.interimResults = true;
-    rec.onresult = e => {
-      let im = "";
+    stopAudio(); editing = false;
+    const base = txt; let fin = "", im = "", err = "", live = false;
+    const r = rec = new SR(); r.lang = SEC[sec].lang; r.continuous = false; r.interimResults = true; r.maxAlternatives = 1;
+    const mc = $("#mc");
+    mc.classList.add("wait"); mc.innerHTML = IC.stop; $("#ml").textContent = "准备中……（先别说，等话筒变红）"; $("#sa").innerHTML = "";
+    const go = () => { if (live || rec !== r) return; live = true; mc.classList.remove("wait"); mc.classList.add("on"); $("#ml").textContent = "请说！说完会自动停，也可以点一下停"; };
+    r.onaudiostart = go; r.onspeechstart = go; r.onstart = () => setTimeout(go, 700);
+    r.onresult = e => {
+      im = "";
       for (let k = e.resultIndex; k < e.results.length; k++) {
-        const r = e.results[k];
-        if (r.isFinal) fin = (fin + " " + r[0].transcript).trim(); else im += r[0].transcript;
+        const x = e.results[k];
+        if (x.isFinal) fin = (fin + " " + x[0].transcript).trim(); else im += x[0].transcript;
       }
-      show(fin, im);
+      go(); show((base + " " + fin).trim(), im);
     };
-    rec.onerror = e => { $("#ml").textContent = e.error === "not-allowed" ? "麦克风没有权限：请在浏览器设置里允许使用麦克风" : e.error === "no-speech" ? "没听到声音，再点一下重新说" : "识别出错（" + e.error + "），可以再试一次或点「打字」"; };
-    rec.onend = () => { rec = null; $("#mc").classList.remove("on"); $("#mc").innerHTML = IC.mic; commit(fin); show(txt); if (!/没|出错|权限/.test($("#ml").textContent)) $("#ml").textContent = txt ? "已记下。想补充就再点一下接着说" : "点一下开始说，说完再点一下"; };
-    try { rec.start(); $("#mc").classList.add("on"); $("#mc").innerHTML = IC.stop; $("#ml").textContent = "正在听……说完点一下停止"; }
-    catch (e) { rec = null; $("#ml").textContent = "启动不了语音识别，可以点「打字」"; }
-  };
-  $("#rs").onclick = () => { stopRec(); setTimeout(() => { commit(""); show(""); if (typing) $("#ta").value = ""; }, 50); };
-  $("#tp").onclick = () => {
-    typing = !typing;
-    $("#ty").innerHTML = typing ? `<textarea id="ta" placeholder="可以用键盘上的麦克风说，也可以直接打字">${esc(txt)}</textarea>` : "";
-    if (typing) { const ta = $("#ta"); ta.focus(); ta.oninput = () => { commit(ta.value); show(txt); }; }
-  };
+    r.onerror = e => { err = e.error; };
+    r.onend = () => {
+      if (rec !== r) return; rec = null;
+      mc.classList.remove("on", "wait"); mc.innerHTML = IC.mic;
+      const got = (fin || im).trim();                     // 没来得及转正的临时结果也收下
+      if (got) commit((base + " " + got).trim());
+      show(txt); acts(); hint();
+      const msg = {
+        "not-allowed": "麦克风没有权限：请在浏览器设置里允许使用麦克风（iPad：设置 → Safari → 麦克风）",
+        "service-not-allowed": "这个浏览器不让用语音识别（iPad：设置 → 通用 → 键盘，打开「启用听写」）",
+        "no-speech": "没听到声音。靠近一点，等话筒变红再说",
+        "audio-capture": "没找到麦克风",
+        "network": "语音识别要联网（是在苹果/谷歌的服务器上识别的），网络不好会失败，再点一次",
+        "language-not-supported": "这台设备没有印尼语听写：iPad 在 设置 → 通用 → 键盘 → 听写语言 里加上 Bahasa Indonesia，或者点「改字」打字",
+      }[err];
+      if (!got) $("#ml").textContent = msg || (err === "aborted" ? "已停止" : "没识别出来。等话筒变红再说，或者点文字框直接打字");
+    };
+    try { r.start(); } catch (e) { rec = null; mc.classList.remove("wait"); mc.innerHTML = IC.mic; $("#ml").textContent = "启动不了语音识别，请点文字框直接打字"; }
+  }
+  hint(); show(txt); acts();
+  if (!SR) edit();
+  $("#pl").onclick = () => playItem(sec, id, $("#pl"));
+  $("#mc").onclick = () => { if (rec) return stopRec(); if (editing && $("#ta")) $("#ta").blur(); stopAudio(); setTimeout(listen, 150); };   // 先停掉题目的声音，留一点时间让音频设备让出来
+  $("#sd").onclick = e => { if (!editing && !rec && !e.target.closest("textarea")) edit(); };
   $("#sh").onclick = () => {
     shown = !shown;
     $("#rv").innerHTML = shown ? `<div class="reveal">${esc(textOf(sec, id))}</div>` : "";
-    $("#sh").textContent = shown ? "藏起文字" : "看文字";
+    $("#sh").textContent = shown ? "收起文字" : "没听清？看文字";
     if (shown && S.ans[d] && S.ans[d][key]) { S.ans[d][key].pk = 1; save(); }
   };
-  $("#pv").onclick = () => { location.hash = `#do/${sec}/${i - 1}`; };
-  $("#nx").onclick = () => { location.hash = `#do/${sec}/${i + 1}`; };
+  $("#pv").onclick = () => { stopRec(); location.hash = `#do/${sec}/${i - 1}`; };
+  $("#nx").onclick = () => { stopRec(); location.hash = `#do/${sec}/${i + 1}`; };
   setTimeout(() => playItem(sec, id, $("#pl")), 250);
 }
 
@@ -404,6 +448,9 @@ function reviewList() {
   }).join("") : '<p class="empty">还没有练习记录。</p>'}`;
 }
 const rich = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+const POS = new Set("n vt vi v adj adv prep num conj pron part int aux art".split(" "));
+// 把文字里的印尼语单词变成指向词典的链接（只处理标签之外的字母串）
+const lk = h => h.replace(/(<[^>]+>)|([A-Za-z][A-Za-z]*(?:-[A-Za-z]+)*)/g, (m, tag, w) => tag || (w.length < 2 || POS.has(w.toLowerCase()) ? m : `<a class="w" href="dict.html#${encodeURIComponent(w.toLowerCase())}">${w}</a>`));
 function reviewDay(d) {
   const C = (K.corr || {})[d] || {}, A = S.ans[d] || {}, ck = Object.keys(C);
   const set = S.fs[d] || (K.sets || {})[d] || {                // 没在网页上做过的那天（比如用 Excel 做的）：按批改里的题列出
@@ -412,15 +459,15 @@ function reviewDay(d) {
   const item = (sec, id, k) => {
     const key = itemId(sec, id), a = A[key], c = C[key];
     const fixLang = sec === "i" ? "zh-CN" : "id-ID";
-    return `<div class="it glass"><div class="q"><span class="n">${k + 1}</span><button class="sp" type="button" data-p="${sec}|${id}" aria-label="听原题">${IC.play}</button><span>${esc(textOf(sec, id))}${c && c.g ? `<span class="g ${c.g}">${GN[c.g]}</span>` : ""}</span></div>
+    return `<div class="it glass"><div class="q"><span class="n">${k + 1}</span><button class="sp" type="button" data-p="${sec}|${id}" aria-label="听原题">${IC.play}</button><span>${lk(esc(textOf(sec, id)))}${c && c.g ? `<span class="g ${c.g}">${GN[c.g]}</span>` : ""}</span></div>
       <div class="kv"><span class="k">你说的</span>${a ? esc(a.t) + (a.pk ? ' <small class="sub">（看过文字）</small>' : "") : c && c.ans ? esc(c.ans) : '<span class="sub">没答</span>'}</div>
-      ${c ? `<div class="kv"><span class="k">改好的</span><span class="fix">${rich(c.fix)}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(c.fix.replace(/\*\*/g, ""))}" data-l="${fixLang}" aria-label="读改好的句子">${IC.play}</button></div>
-        ${c.note ? `<div class="kv"><span class="k">改了什么</span>${esc(c.note)}</div>` : ""}${c.words ? `<div class="kv"><span class="k">生词</span>${esc(c.words)}</div>` : ""}${c.pat ? `<div class="kv"><span class="k">句型</span>${esc(c.pat)}</div>` : ""}${c.up ? `<div class="kv"><span class="k">升级版</span>${esc(c.up)}</div>` : ""}${c.ext ? `<div class="kv"><span class="k">扩充</span>${esc(c.ext)}</div>` : ""}` : ""}
+      ${c ? `<div class="kv"><span class="k">改好的</span><span class="fix">${lk(rich(c.fix))}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(c.fix.replace(/\*\*/g, ""))}" data-l="${fixLang}" aria-label="读改好的句子">${IC.play}</button></div>
+        ${c.note ? `<div class="kv"><span class="k">改了什么</span>${lk(esc(c.note))}</div>` : ""}${c.words ? `<div class="kv"><span class="k">生词</span>${lk(esc(c.words))}</div>` : ""}${c.pat ? `<div class="kv"><span class="k">句型</span>${lk(esc(c.pat))}</div>` : ""}${c.up ? `<div class="kv"><span class="k">升级版</span>${lk(esc(c.up))}</div>` : ""}${c.ext ? `<div class="kv"><span class="k">扩充</span>${lk(esc(c.ext))}</div>` : ""}` : ""}
     </div>`;
   };
   const com = (K.common || {})[d];
   $("#app").innerHTML = `<div class="top"><div><a href="#review" class="sub" style="text-decoration:none">‹ 复盘</a><h1>${d}</h1></div>${tabs("review")}</div>
-  ${com ? `<div class="card glass common"><b style="font-family:var(--cjk)">这次的共性问题</b><ul>${com.map(x => `<li>${rich(x)}</li>`).join("")}</ul></div>` : Object.keys(C).length ? "" : '<div class="card glass note">还没批改。做完以后告诉 cc「做完了」。</div>'}
+  ${com ? `<div class="card glass common"><b style="font-family:var(--cjk)">这次的共性问题</b><ul>${com.map(x => `<li>${lk(rich(x))}</li>`).join("")}</ul></div>` : Object.keys(C).length ? "" : '<div class="card glass note">还没批改。做完以后告诉 cc「做完了」。</div>'}
   ${["qa", "z", "i"].map(sec => {
     const ids = [...(set[sec] || [])];                         // 加上批改里有、但不在当天题单里的（Excel 做的那天）
     ck.forEach(k => { const id = sec === "qa" ? (k[0] === "q" ? k : "") : (k.endsWith(sec) && k[0] === "t" ? k.slice(0, -1) : ""); if (id && !ids.includes(id)) ids.push(id); });
@@ -437,8 +484,8 @@ function sentPage() {
   $("#app").innerHTML = `<div class="top"><div><h1>我的句子</h1><p class="sub">批改过的回答。先听题、自己说，再点开答案对一下</p></div>${tabs("sent")}</div>
   ${L.length ? Object.entries(groups).map(([t, xs]) => `<div class="sect">${esc(t)}</div>` + xs.map(x => {
     const q = D.qa.find(y => y.q === x.q);
-    return `<div class="it glass"><div class="q">${q ? `<button class="sp" type="button" data-p="qa|${q.id}" aria-label="听题目">${IC.play}</button>` : ""}<span>${esc(x.q)}</span></div>
-    <div class="kv"><span class="hid fix" data-un>${esc(x.a)}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(x.a)}" data-l="id-ID" aria-label="读答案">${IC.play}</button></div>
+    return `<div class="it glass"><div class="q">${q ? `<button class="sp" type="button" data-p="qa|${q.id}" aria-label="听题目">${IC.play}</button>` : ""}<span>${lk(esc(x.q))}</span></div>
+    <div class="kv"><span class="hid fix" data-un>${lk(esc(x.a))}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(x.a)}" data-l="id-ID" aria-label="读答案">${IC.play}</button></div>
     ${x.zh ? `<div class="kv sub">${esc(x.zh)}</div>` : ""}</div>`;
   }).join("")).join("") : '<p class="empty">批改以后，改好的句子会出现在这里。</p>'}`;
 }
