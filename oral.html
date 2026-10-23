@@ -201,18 +201,33 @@ function freshQA(d, n, skip) {
   return D.qa.filter(x => !P[x.id] && !done.has(x.id) && !skip.has(x.id))
     .sort((a, b) => a.src - b.src || b.zt - a.zt || hashStr(a.id + d) - hashStr(b.id + d)).slice(0, n).map(x => x.id);
 }
+// 考前（EXAM 前一天为止）：原题/真题平均分到每一天，保证考前全部过一遍；复习、课本例句只占剩下的位置
+const EXAM = "2026-10-29";
+const daysLeft = d => Math.max(0, Math.round((new Date(EXAM) - new Date(d)) / 864e5));
 function compute(d) {
-  const qaRev = dueOf(D.qa.map(x => x.id), d, 10);
+  const P = K.prog || {}, done = answered(), left = daysLeft(d);
+  const qaLeft = D.qa.filter(x => x.src === 0 && !P[x.id] && !done.has(x.id)).length;
+  const qaRev = dueOf(D.qa.map(x => x.id), d, left ? Math.max(0, Math.min(10, 20 - Math.ceil(qaLeft / left))) : 10);
   const qa = [...qaRev, ...freshQA(d, 20 - qaRev.length, new Set(qaRev))];
-  const used = new Set(), done = answered(), P = K.prog || {}, out = { qa, rv: qaRev };
+  const used = new Set(), out = { qa, rv: qaRev };
+  const seen = id => P[id + "z"] || P[id + "i"] || done.has(id + "z") || done.has(id + "i");   // 互译：哪个方向做过都算
+  const ord = dir => (a, b) => b.zt - a.zt || hashStr(a.id + d + dir) - hashStr(b.id + d + dir);
+  const core = D.tr.filter(x => x.src === 0 && !seen(x.id)).sort(ord(""));
+  const need = left ? Math.min(core.length, Math.ceil(core.length / left), 20) : 0;   // 前几天没做也最多一天 20 句
+  const share = { z: Math.ceil(need / 2), i: Math.floor(need / 2) };
   for (const dir of ["z", "i"]) {
-    const rev = dueOf(D.tr.map(x => x.id + dir), d, 3).map(x => x.slice(0, -1));
-    const ok = x => !P[x.id + dir] && !done.has(x.id + dir) && !used.has(x.id) && !rev.includes(x.id);
-    const ord = (a, b) => a.src - b.src || b.zt - a.zt || hashStr(a.id + d + dir) - hashStr(b.id + d + dir);
-    const extra = D.tr.filter(x => x.src === 2 && ok(x)).sort(ord).slice(0, 2).map(x => x.id);
-    const main = D.tr.filter(x => x.src < 2 && ok(x)).sort(ord).slice(0, 10 - rev.length - extra.length).map(x => x.id);
-    out[dir] = [...rev, ...main, ...extra];
-    out[dir].forEach(x => used.add(x));
+    const rev = dueOf(D.tr.map(x => x.id + dir), d, Math.min(3, 10 - share[dir])).map(x => x.slice(0, -1));
+    rev.forEach(x => used.add(x));
+    const mine = core.filter(x => !used.has(x.id)).slice(0, share[dir]).map(x => x.id);
+    mine.forEach(x => used.add(x));
+    const n = Math.max(0, 10 - rev.length - mine.length);
+    const ok = x => !seen(x.id) && !used.has(x.id);
+    const fill = left
+      ? D.tr.filter(x => x.src !== 0 && ok(x)).sort((a, b) => (a.src === 2 ? 0 : 1) - (b.src === 2 ? 0 : 1) || ord(dir)(a, b)).slice(0, n).map(x => x.id)
+      : [...D.tr.filter(x => x.src < 2 && !P[x.id + dir] && !done.has(x.id + dir) && !used.has(x.id)).sort((a, b) => a.src - b.src || ord(dir)(a, b)).slice(0, n - 2),
+         ...D.tr.filter(x => x.src === 2 && ok(x)).sort(ord(dir)).slice(0, 2)].map(x => x.id);
+    fill.forEach(x => used.add(x));
+    out[dir] = [...rev, ...mine, ...fill];
     out.rv = out.rv.concat(rev.map(x => x + dir));
   }
   return out;
