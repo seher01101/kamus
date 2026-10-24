@@ -141,6 +141,15 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .ln.cur{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
 .ln .lp{width:32px;height:32px;border-radius:99px;border:0;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;cursor:pointer;grid-row:span 3}
 .ln .lp svg{width:14px;height:14px}
+.ln .lc{grid-row:span 3;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ln .lc .lp{grid-row:auto}
+.fstar{width:32px;height:28px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;border-radius:99px;-webkit-tap-highlight-color:transparent;transition:transform .3s cubic-bezier(.34,1.56,.64,1),color .2s}
+.fstar svg{width:19px;height:19px;fill:none;stroke:currentColor;transition:fill .2s}
+.fstar:active{transform:scale(.8)}
+.fstar[aria-pressed="true"]{color:var(--gold)}
+.fstar[aria-pressed="true"] svg{fill:currentColor;animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+.empty-fav{text-align:center;color:var(--muted);padding:56px 24px;line-height:1.9;font-family:var(--cjk)}
+.empty-fav b{color:var(--ink-soft);font-size:15px}
 .ln{position:relative}
 .ln.has-an{padding-right:64px}
 .anb{position:absolute;top:9px;right:10px;font:inherit;font-size:12px;font-weight:600;border:0;border-radius:99px;padding:3px 10px;cursor:pointer;color:var(--gold);background:var(--gold-soft);white-space:nowrap}
@@ -262,6 +271,7 @@ body::before{background:
         <button type="button" data-k="dlg" aria-pressed="false">对话</button>
         <button type="button" data-k="text" aria-pressed="false">课文</button>
         <button type="button" data-k="culture" aria-pressed="false">印尼视野</button>
+        <button type="button" data-k="fav" aria-pressed="false" id="favTab">★ 收藏</button>
       </div>
     </div>
   </div>
@@ -306,7 +316,8 @@ const HINT = {
   trans: "听一句印尼语，<b>自己说出中文意思</b>，再点开文字核对。对应考试的“印尼语翻译中文”。",
   dlg: "课本里的对话，男女角色分别用男声、女声。建议先不看文字听两遍，再逐句对照。",
   text: "课文朗读。先听全文，再点开印尼语和中文；下面还有问答可以练。",
-  culture: "印尼文化短文，适合泛听。"
+  culture: "印尼文化短文，适合泛听。",
+  fav: "考官问答和听句翻译里点 ★ 收藏的句子。老是记不住的放这里，反复练；练会了点 ★ 取消。"
 };
 const bookCls = b => b === "武功秘籍" || b === "扩充题库" || b === "真题录音" ? "wg" : b === "BIPA 2" ? "b2" : b === "Daring" ? "dr" : "";
 
@@ -319,7 +330,11 @@ async function listenSync() {
   if (!window.KSync || !KSync.user()) return;
   try {
     const r = await KSync.pull("listen");
-    if (r) { store.done = Object.assign({}, r.done, store.done); for (const k in r) if (k !== "done" && !(k in store)) store[k] = r[k]; }
+    if (r) {
+      store.done = Object.assign({}, r.done, store.done);
+      for (const k in (r.stars || {})) if (!store.stars[k] || (r.stars[k].t || 0) > (store.stars[k].t || 0)) store.stars[k] = r.stars[k];   // 收藏：谁新听谁的
+      for (const k in r) if (k !== "done" && k !== "stars" && !(k in store)) store[k] = r[k];
+    }
     try { localStorage.setItem("listen-v1", JSON.stringify(store)); } catch (e) {}
     LSYNCED = true;
     await KSync.push("listen", store);
@@ -327,6 +342,28 @@ async function listenSync() {
   } catch (e) {}
 }
 store.done = store.done || {};
+store.stars = store.stars || {};
+// ---------- 收藏（考官问答 + 听句翻译）：stars[键] = {t: 时间, on: 1/0}；翻译句的键是印尼语原句，考官问答整对（问+答）共用「Q:问句」
+const LIDX = {};     // 收藏键 → 要显示的行（翻译句 1 行，问答 2 行）
+for (const it of DATA) {
+  if (it.kind === "exam") {
+    let q = null;
+    for (const l of it.lines) { if (l.role === "q") q = l; else if (l.role === "a" && q) { l._q = q.id.trim(); if (!LIDX["Q:" + l._q]) LIDX["Q:" + l._q] = [q, l]; } }
+  } else if (it.kind === "trans") for (const l of it.lines) { const k = l.id.trim(); if (!LIDX[k]) LIDX[k] = [l]; }
+}
+const starKey = l => l.role === "q" ? "Q:" + l.id.trim() : l.role === "a" ? "Q:" + (l._q || "") : l.id.trim();
+const isStar = k => !!(store.stars[k] && store.stars[k].on);
+const nStars = () => Object.keys(store.stars).filter(k => store.stars[k].on && LIDX[k]).length;
+const STAR = '<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 3 1.1-6.1L3.2 9.6l6.1-.8z"/></svg>';
+function toggleStar(k) {
+  const on = !isStar(k);
+  store.stars[k] = { t: Date.now(), on: on ? 1 : 0 };
+  save(); return on;
+}
+function favItem() {
+  const ks = Object.entries(store.stars).filter(([k, v]) => v.on && LIDX[k]).sort((a, b) => b[1].t - a[1].t).map(x => x[0]);
+  return { id: "fav0", kind: "trans", book: "收藏", title: "我的收藏", lines: ks.flatMap(k => LIDX[k]), zh: "", note: "", qa: [], fav: true };
+}
 let kind = store.kind || "exam", book = store.book || "", showId = !!store.showId, showZh = !!store.showZh, pause = store.pause || 6;
 let zhm = store.zhm || "off", rep = store.rep || 1, gapK = store.gap || "m";      // 怎么念 / 念几遍 / 停顿
 const pnote = () => ({ zo: "只念中文，留时间让你自己说出印尼语（练中译印，不放答案；想对答案选「中文 → 印尼语」）", zi: "先听中文，自己说出印尼语，再听正确说法（练中译印）", iz: "先听印尼语，自己想意思，再听中文对答案" }[zhm] || "只念印尼语；要中文提示就选其他几种");
@@ -382,6 +419,14 @@ function renderList() {
   setSeg("#kinds", "k", kind);
   $("#kindHint").innerHTML = HINT[kind];
   let html = "";
+  const ft = $("#favTab"); if (ft) ft.textContent = "★ 收藏" + (nStars() ? " " + nStars() : "");
+  if (kind === "fav") {
+    const n = nStars();
+    $("#list").innerHTML = n
+      ? `<h2 class="grp">我的收藏<small>${n} 条</small></h2><div class="card glass"><button class="cmain" type="button" data-open="fav0"><div class="t">全部收藏，一页练</div><div class="m">考官问答（问+答成对）和听句翻译混在一起，最近收藏的在前</div></button><div class="go"><button class="pbtn" type="button" data-open="fav0" aria-label="练收藏">${IC.play}</button></div></div>`
+      : `<div class="empty-fav"><b>还没有收藏</b><br>在「考官问答」或「听句翻译」里，点每一句左边的 ★，老是记不住的句子就会放到这里。</div>`;
+    return;
+  }
   for (const [key, name, sub] of GROUPS) {
     const rows = rowsOf(kind, key);
     if (!rows.length) continue;
@@ -419,11 +464,14 @@ function lineHTML(l, k) {
   const sp = l.sp ? `<div class="sp ${spCls}">${esc(l.sp)}</div>` : "";
   const an = l.an ? `<button class="anb" type="button" data-ana="${k}" aria-expanded="false">解析</button>` : "";
   const box = l.an ? `<div class="ana-box" hidden><div class="awords">${l.an.p.map(([w, z]) => `<div class="aw"><b>${esc(w)}</b><span>${esc(z)}</span></div>`).join("")}</div>${l.an.b ? `<div class="abld"><b>构词</b> ${esc(l.an.b)}</div>` : ""}<div class="agram"><b>语法</b>　${esc(l.an.g)}</div></div>` : "";
-  return `<div class="ln glass${l.an ? " has-an" : ""}" data-k="${k}">${an}<button class="lp" type="button" data-one="${k}" aria-label="播放这一句">${IC.spk}</button>${sp}<div class="id ${showId ? "" : "hid"}" data-rev>${wordLinks(l.id)}</div>${l.zh ? `<div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(l.zh)}</div>` : ""}${box}</div>`;
+  const canStar = k[0] === "L" && cur && (cur.kind === "exam" || cur.kind === "trans");
+  const sk = canStar ? starKey(l) : "";
+  const star = canStar && sk ? `<button class="fstar" type="button" data-star="${esc(sk)}" aria-pressed="${isStar(sk)}" aria-label="收藏这一句">${STAR}</button>` : "";
+  return `<div class="ln glass${l.an ? " has-an" : ""}" data-k="${k}">${an}<div class="lc"><button class="lp" type="button" data-one="${k}" aria-label="播放这一句">${IC.spk}</button>${star}</div>${sp}<div class="id ${showId ? "" : "hid"}" data-rev>${wordLinks(l.id)}</div>${l.zh ? `<div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(l.zh)}</div>` : ""}${box}</div>`;
 }
 
 function openItem(id, autoplay) {
-  cur = DATA.find(x => x.id === id); if (!cur) return;
+  cur = id === "fav0" ? favItem() : DATA.find(x => x.id === id); if (!cur) return;
   stop();
   queue = cur.lines.map((l, i) => ({ a: l.a, za: l.za || "", k: "L" + i, role: l.role, id: l.id }));
   closePop();
@@ -593,6 +641,13 @@ document.addEventListener("click", ev => {
   if (pp) { openPop(pp); return; }
   if (t.closest("[data-back]")) return back();
   // 整个句子框都能点读；框里的单词链接仍然去词典，被模糊的文字点一下是显示文字（不播放）
+  const st = t.closest("[data-star]");
+  if (st) {
+    const on = toggleStar(st.dataset.star);
+    document.querySelectorAll(".fstar").forEach(b => { if (b.dataset.star === st.dataset.star) b.setAttribute("aria-pressed", on); });   // 问答整对一起亮/灭
+    toast(on ? "已收藏 · 在「★ 收藏」里练" : cur && cur.fav ? "已取消（离开这页后移除）" : "已取消收藏");
+    return;
+  }
   const anb = t.closest("[data-ana]");
   if (anb) { const bx = anb.closest(".ln").querySelector(".ana-box"); const open = bx.hidden; bx.hidden = !open; anb.setAttribute("aria-expanded", String(open)); return; }
   const row = t.closest("#detail .ln[data-k]");
@@ -621,6 +676,7 @@ tapper($("#next"), () => { playing = true; playClip(Math.min(queue.length - 1, q
 function siblings() { const out = []; for (const [key] of GROUPS) out.push(...rowsOf(cur.kind, key)); return out; }
 function jumpItem(d, auto) {
   if (!cur) return;
+  if (cur.fav) return toast(auto ? "收藏全部听完了" : "收藏是一整页，没有上一篇/下一篇");
   const s = siblings(), n = s[s.findIndex(x => x.id === cur.id) + d];
   if (!n) return toast(d > 0 ? (auto ? "这一类全部听完了 🎉" : "已经是最后一篇") : "已经是第一篇");
   openItem(n.id, true);
