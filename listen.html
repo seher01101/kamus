@@ -148,6 +148,14 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 .fstar:active{transform:scale(.8)}
 .fstar[aria-pressed="true"]{color:var(--gold)}
 .fstar[aria-pressed="true"] svg{fill:currentColor;animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+.srs{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);cursor:default;border-radius:10px;transition:background .3s}
+.srs.flash{background:var(--gold-soft)}
+.srs .st{flex:1;min-width:0;font-family:var(--cjk);font-size:12px;color:var(--muted)}
+.srs .st.hard{color:var(--bad,#c4264a);font-weight:600}
+.gbtn{font:inherit;font-family:var(--cjk);font-size:12.5px;font-weight:600;border:0;border-radius:99px;padding:5px 14px;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.gbtn:active{transform:scale(.92)}
+.gbtn.ok{color:var(--good);background:var(--good-soft)}
+.gbtn.no{color:#c4264a;background:color-mix(in srgb,#c4264a 12%,transparent)}
 .empty-fav{text-align:center;color:var(--muted);padding:56px 24px;line-height:1.9;font-family:var(--cjk)}
 .empty-fav b{color:var(--ink-soft);font-size:15px}
 .ln{position:relative}
@@ -317,7 +325,7 @@ const HINT = {
   dlg: "课本里的对话，男女角色分别用男声、女声。建议先不看文字听两遍，再逐句对照。",
   text: "课文朗读。先听全文，再点开印尼语和中文；下面还有问答可以练。",
   culture: "印尼文化短文，适合泛听。",
-  fav: "考官问答和听句翻译里点 ★ 收藏的句子。老是记不住的放这里，反复练；练会了点 ★ 取消。"
+  fav: "在考官问答、听句翻译、课文、对话里点 ★ 收藏的句子。每句下面点「会了」或「还不会」：会了的往后排，总记不住的更常出现。"
 };
 const bookCls = b => b === "武功秘籍" || b === "扩充题库" || b === "真题录音" ? "wg" : b === "BIPA 2" ? "b2" : b === "Daring" ? "dr" : "";
 
@@ -349,21 +357,49 @@ for (const it of DATA) {
   if (it.kind === "exam") {
     let q = null;
     for (const l of it.lines) { if (l.role === "q") q = l; else if (l.role === "a" && q) { l._q = q.id.trim(); if (!LIDX["Q:" + l._q]) LIDX["Q:" + l._q] = [q, l]; } }
-  } else if (it.kind === "trans") for (const l of it.lines) { const k = l.id.trim(); if (!LIDX[k]) LIDX[k] = [l]; }
+  } else if (it.kind === "trans" || it.kind === "text" || it.kind === "dlg") for (const l of it.lines) { const k = l.id.trim(); if (!LIDX[k]) LIDX[k] = [l]; }
 }
 const starKey = l => l.role === "q" ? "Q:" + l.id.trim() : l.role === "a" ? "Q:" + (l._q || "") : l.id.trim();
 const isStar = k => !!(store.stars[k] && store.stars[k].on);
 const nStars = () => Object.keys(store.stars).filter(k => store.stars[k].on && LIDX[k]).length;
 const STAR = '<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 3 1.1-6.1L3.2 9.6l6.1-.8z"/></svg>';
+// 间隔复习：lv 0–5；「会了」升一级并推迟下次出现（0、6 小时、1、2、4、7 天），「还不会」回到 0 级、马上再出现、miss 加一
+const DAY = 864e5, INTV = [0, .25, 1, 2, 4, 7];
+const recOf = k => (LIDX[k] || []).map(l => ({ r: l.role, id: l.id, zh: l.zh || "", a: l.a, za: l.za || "" }));   // 口语页只靠这份就能练，不用再加载整套数据
 function toggleStar(k) {
   const on = !isStar(k);
-  store.stars[k] = { t: Date.now(), on: on ? 1 : 0 };
+  store.stars[k] = on ? { t: Date.now(), on: 1, lv: 0, due: 0, miss: 0, rec: recOf(k) } : Object.assign({}, store.stars[k], { t: Date.now(), on: 0 });
   save(); return on;
 }
-function favItem() {
-  const ks = Object.entries(store.stars).filter(([k, v]) => v.on && LIDX[k]).sort((a, b) => b[1].t - a[1].t).map(x => x[0]);
-  return { id: "fav0", kind: "trans", book: "收藏", title: "我的收藏", lines: ks.flatMap(k => LIDX[k]), zh: "", note: "", qa: [], fav: true };
+const srsOf = k => { const s = store.stars[k] || {}; return { lv: s.lv || 0, due: s.due || 0, miss: s.miss || 0 }; };
+function relTime(ms) { const h = ms / 36e5; return h < 1 ? "不到 1 小时" : h < 24 ? Math.round(h) + " 小时" : Math.round(ms / DAY) + " 天"; }
+function srsText(k) {
+  const s = srsOf(k), left = s.due - Date.now();
+  if (left > 0) return (s.lv >= 4 ? "已会 · " : "") + relTime(left) + "后再练";
+  return s.miss >= 3 ? "总记不住 ×" + s.miss : s.lv === 0 && !s.miss ? "新收藏" : "该复习了";
 }
+function gradeStar(k, ok) {
+  const s = store.stars[k]; if (!s) return;
+  if (ok) { s.lv = Math.min(5, (s.lv || 0) + 1); s.due = Date.now() + INTV[s.lv] * DAY; }
+  else { s.lv = 0; s.miss = (s.miss || 0) + 1; s.due = 0; }
+  s.t = Date.now(); save();
+}
+// 收藏页的顺序：该复习的在前（总记不住的最前），还没到时间的往后排（越晚到期越靠后）
+function favKeys() {
+  const now = Date.now();
+  const ks = Object.keys(store.stars).filter(k => store.stars[k].on && LIDX[k]);
+  const due = k => srsOf(k).due <= now;
+  return ks.sort((a, b) => (due(b) - due(a)) || (due(a) ? srsOf(b).miss - srsOf(a).miss || srsOf(a).lv - srsOf(b).lv || srsOf(a).due - srsOf(b).due : srsOf(a).due - srsOf(b).due));
+}
+const nDue = () => favKeys().filter(k => srsOf(k).due <= Date.now()).length;
+function favItem() {
+  return { id: "fav0", kind: "trans", book: "收藏", title: "我的收藏", lines: favKeys().flatMap(k => LIDX[k]), zh: "", note: "", qa: [], fav: true };
+}
+(() => {      // 老收藏补上复习字段和口语页要用的 rec
+  let ch = 0;
+  for (const k in store.stars) { const s = store.stars[k]; if (s.on && !s.rec && LIDX[k]) { s.rec = recOf(k); ch = 1; } if (s.lv === undefined) { s.lv = 0; s.due = 0; s.miss = 0; ch = 1; } }
+  if (ch) save();
+})();
 let kind = store.kind || "exam", book = store.book || "", showId = !!store.showId, showZh = !!store.showZh, pause = store.pause || 6;
 let zhm = store.zhm || "off", rep = store.rep || 1, gapK = store.gap || "m";      // 怎么念 / 念几遍 / 停顿
 const pnote = () => ({ zo: "只念中文，留时间让你自己说出印尼语（练中译印，不放答案；想对答案选「中文 → 印尼语」）", zi: "先听中文，自己说出印尼语，再听正确说法（练中译印）", iz: "先听印尼语，自己想意思，再听中文对答案" }[zhm] || "只念印尼语；要中文提示就选其他几种");
@@ -423,8 +459,8 @@ function renderList() {
   if (kind === "fav") {
     const n = nStars();
     $("#list").innerHTML = n
-      ? `<h2 class="grp">我的收藏<small>${n} 条</small></h2><div class="card glass"><button class="cmain" type="button" data-open="fav0"><div class="t">全部收藏，一页练</div><div class="m">考官问答（问+答成对）和听句翻译混在一起，最近收藏的在前</div></button><div class="go"><button class="pbtn" type="button" data-open="fav0" aria-label="练收藏">${IC.play}</button></div></div>`
-      : `<div class="empty-fav"><b>还没有收藏</b><br>在「考官问答」或「听句翻译」里，点每一句左边的 ★，老是记不住的句子就会放到这里。</div>`;
+      ? `<h2 class="grp">我的收藏<small>${n} 条</small></h2><div class="card glass"><button class="cmain" type="button" data-open="fav0"><div class="t">全部收藏，一页练</div><div class="m">${nDue() ? "现在该复习 " + nDue() + " 句，排在最前面" : "现在没有要复习的，都往后排了"} · 问答成对，课文/对话/翻译句混在一起</div></button><div class="go"><button class="pbtn" type="button" data-open="fav0" aria-label="练收藏">${IC.play}</button></div></div>`
+      : `<div class="empty-fav"><b>还没有收藏</b><br>在「考官问答」「听句翻译」「课文」「对话」里，点每一句左边的 ★，老是记不住的句子就会放到这里。</div>`;
     return;
   }
   for (const [key, name, sub] of GROUPS) {
@@ -464,10 +500,11 @@ function lineHTML(l, k) {
   const sp = l.sp ? `<div class="sp ${spCls}">${esc(l.sp)}</div>` : "";
   const an = l.an ? `<button class="anb" type="button" data-ana="${k}" aria-expanded="false">解析</button>` : "";
   const box = l.an ? `<div class="ana-box" hidden><div class="awords">${l.an.p.map(([w, z]) => `<div class="aw"><b>${esc(w)}</b><span>${esc(z)}</span></div>`).join("")}</div>${l.an.b ? `<div class="abld"><b>构词</b> ${esc(l.an.b)}</div>` : ""}<div class="agram"><b>语法</b>　${esc(l.an.g)}</div></div>` : "";
-  const canStar = k[0] === "L" && cur && (cur.kind === "exam" || cur.kind === "trans");
+  const canStar = k[0] === "L" && cur && (cur.kind === "exam" || cur.kind === "trans" || cur.kind === "text" || cur.kind === "dlg");
   const sk = canStar ? starKey(l) : "";
+  const bar = canStar && cur.fav && sk && l.role !== "q" ? `<div class="srs" data-sk="${esc(sk)}"><span class="st${srsOf(sk).miss >= 3 ? " hard" : ""}">${esc(srsText(sk))}</span><button class="gbtn no" type="button" data-grade="no">还不会</button><button class="gbtn ok" type="button" data-grade="ok">会了</button></div>` : "";
   const star = canStar && sk ? `<button class="fstar" type="button" data-star="${esc(sk)}" aria-pressed="${isStar(sk)}" aria-label="收藏这一句">${STAR}</button>` : "";
-  return `<div class="ln glass${l.an ? " has-an" : ""}" data-k="${k}">${an}<div class="lc"><button class="lp" type="button" data-one="${k}" aria-label="播放这一句">${IC.spk}</button>${star}</div>${sp}<div class="id ${showId ? "" : "hid"}" data-rev>${wordLinks(l.id)}</div>${l.zh ? `<div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(l.zh)}</div>` : ""}${box}</div>`;
+  return `<div class="ln glass${l.an ? " has-an" : ""}" data-k="${k}">${an}<div class="lc"><button class="lp" type="button" data-one="${k}" aria-label="播放这一句">${IC.spk}</button>${star}</div>${sp}<div class="id ${showId ? "" : "hid"}" data-rev>${wordLinks(l.id)}</div>${l.zh ? `<div class="zh ${showZh ? "" : "hid"}" data-rev>${esc(l.zh)}</div>` : ""}${box}${bar}</div>`;
 }
 
 function openItem(id, autoplay) {
@@ -641,6 +678,15 @@ document.addEventListener("click", ev => {
   if (pp) { openPop(pp); return; }
   if (t.closest("[data-back]")) return back();
   // 整个句子框都能点读；框里的单词链接仍然去词典，被模糊的文字点一下是显示文字（不播放）
+  const gr = t.closest("[data-grade]");
+  if (gr) {
+    const box = gr.closest(".srs"), k = box.dataset.sk, ok = gr.dataset.grade === "ok";
+    gradeStar(k, ok);
+    box.querySelector(".st").textContent = srsText(k); box.querySelector(".st").classList.toggle("hard", srsOf(k).miss >= 3);
+    box.classList.add("flash"); setTimeout(() => box.classList.remove("flash"), 500);
+    toast(ok ? "会了 · " + srsText(k) : "还不会 · 等下会再出现");
+    return;
+  }
   const st = t.closest("[data-star]");
   if (st) {
     const on = toggleStar(st.dataset.star);

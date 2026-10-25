@@ -74,6 +74,8 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{
 .task.done .mini i{background:var(--good)}
 .btn{font:inherit;font-size:15px;font-weight:600;border:0;background:var(--prac);color:#fff;border-radius:14px;padding:11px 18px;cursor:pointer;text-decoration:none;display:inline-block}
 .btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--glass-border)}
+.btn.no{background:var(--bad-soft);color:var(--bad)}
+.btn.okb{background:var(--good-soft);color:var(--good)}
 .btn:disabled{opacity:.45;cursor:default}
 .row2{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .note{font-size:13.5px;color:var(--ink-soft);font-family:var(--cjk)}
@@ -279,10 +281,132 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null;
 function stopRec() { if (rec) { try { rec.stop(); } catch (e) {} } }
 
+// ---------- 收藏 · 开口说：听力页 ★ 收藏的句子（数据在 listen-v1，和听力页共用）。单独一块，不进每日题单，所以不影响批改和复盘
+const LK = "listen-v1", DAYMS = 864e5, INTV = [0, .25, 1, 2, 4, 7];       // 间隔复习：会了推迟（6 小时、1、2、4、7 天），还不会马上再出现
+const lstore = () => { const s = rd(LK) || {}; s.stars = s.stars || {}; return s; };
+function lsave(st) { wr(LK, st); if (KSync.user()) KSync.later("listen", favSync, () => st); }
+async function favSync() {
+  if (!KSync.user()) return;
+  try {
+    const r = await KSync.pull("listen"), st = lstore();
+    if (r) {
+      st.done = Object.assign({}, r.done, st.done);
+      for (const k in (r.stars || {})) if (!st.stars[k] || (r.stars[k].t || 0) > (st.stars[k].t || 0)) st.stars[k] = r.stars[k];
+      for (const k in r) if (k !== "done" && k !== "stars" && !(k in st)) st[k] = r[k];
+      wr(LK, st);
+    }
+    await KSync.push("listen", st);
+  } catch (e) {}
+}
+const gOf = s => ({ lv: s.lv || 0, due: s.due || 0, miss: s.miss || 0 });
+function favList() {                                                         // 该复习的在前（总记不住的最前），没到时间的往后排
+  const S0 = lstore().stars, now = Date.now();
+  const ks = Object.keys(S0).filter(k => S0[k].on && S0[k].rec && S0[k].rec.length);
+  const due = k => gOf(S0[k]).due <= now;
+  ks.sort((a, b) => (due(b) - due(a)) || (due(a) ? gOf(S0[b]).miss - gOf(S0[a]).miss || gOf(S0[a]).lv - gOf(S0[b]).lv || gOf(S0[a]).due - gOf(S0[b]).due : gOf(S0[a]).due - gOf(S0[b]).due));
+  return ks.map(k => Object.assign({ k, rec: S0[k].rec }, gOf(S0[k])));
+}
+function gradeFav(k, ok) {
+  const st = lstore(), s = st.stars[k]; if (!s) return;
+  if (ok) { s.lv = Math.min(5, (s.lv || 0) + 1); s.due = Date.now() + INTV[s.lv] * DAYMS; }
+  else { s.lv = 0; s.miss = (s.miss || 0) + 1; s.due = 0; }
+  s.t = Date.now(); lsave(st);
+}
+const favCard = () => {
+  const L = favList(), nd = L.filter(x => x.due <= Date.now()).length;
+  if (!L.length) return `<div class="task glass"><span class="ic">★</span><span><b>收藏 · 开口说</b><small>还没有收藏。在「听力」页点句子左边的 ★，老记不住的就会出现在这里</small></span></div>`;
+  return `<a class="task glass" href="#fav"><span class="ic">★</span><span><b>收藏 · 开口说</b><small>${nd ? "现在该练 " + nd + " 句" : "都往后排了，也可以提前练"} · 共收藏 ${L.length} 句</small></span><span class="go">开始 ›</span></a>`;
+};
+let FQ = null, FS = { ok: 0, no: 0 };
+function favQueue() {
+  const L = favList(), now = Date.now(), due = L.filter(x => x.due <= now);
+  return (due.length ? due : L.slice(0, 10)).slice(0, 20).map(x => ({ k: x.k, rec: x.rec, early: !due.length }));
+}
+// 四种练法：问答（听考官问，说回答）/ 中→印 / 印→中 / 跟读（没有中文的句子）
+const favMode = it => { const r = it.rec; if (r.length === 2) return "qa"; if (!r[0].zh || !r[0].za) return "r"; return (gOf(lstore().stars[it.k] || {}).lv % 2) ? "i" : "z"; };
+const nw = s => String(s).toLowerCase().replace(/[^a-z0-9一-龥 ]/g, " ").split(/\s+/).filter(Boolean);
+function favSim(said, target) { const t = nw(target), s = new Set(nw(said)); if (!t.length) return ""; return "说对了 " + t.filter(w => s.has(w)).length + "/" + t.length + " 个词"; }
+function playFav(file, text, lang, btn) {
+  stopAudio();
+  if (!file) return tts(text, lang, btn);
+  au.src = "audio/" + file + ".mp3"; au.playbackRate = 1;
+  if (btn) { btn.classList.add("on"); au.onended = au.onpause = () => btn.classList.remove("on"); }
+  au.play().catch(() => { if (btn) btn.classList.remove("on"); tts(text, lang, btn); });
+}
+function favPage(i) {
+  if (i < 0 || !FQ) { FQ = favQueue(); FS = { ok: 0, no: 0 }; if (i < 0) { i = 0; try { history.replaceState(null, "", "#fav/0"); } catch (e) {} } }
+  const head = `<div class="top"><div><a href="#" class="sub" style="text-decoration:none">‹ 口语练习</a><h1>收藏 · 开口说</h1></div></div>`;
+  if (!FQ.length) { $("#app").innerHTML = head + `<div class="card glass note">还没有收藏。在「听力」页点句子左边的 ★ 就会出现在这里。</div>`; return; }
+  if (i >= FQ.length) {
+    $("#app").innerHTML = head + `<div class="card glass" style="text-align:center"><div style="font-family:var(--font-display);font-size:46px;font-weight:700;color:var(--prac)">${FS.ok}/${FS.ok + FS.no}</div>
+      <p class="note">${FS.no ? "「还不会」的 " + FS.no + " 次已经排到前面，过一会儿再来。" : "这一轮都会了 ✓"}</p>
+      <div class="row2" style="justify-content:center"><a class="btn" href="#fav">再来一轮</a><a class="btn ghost" href="#">回首页</a></div></div>`;
+    favSync(); return;
+  }
+  const it = FQ[i], r = it.rec, mode = favMode(it);
+  const lang = mode === "i" ? "zh-CN" : "id-ID";
+  const pFile = mode === "z" ? r[0].za : r[0].a, pText = mode === "z" ? r[0].zh : r[0].id, pLang = mode === "z" ? "zh-CN" : "id-ID";
+  const aRec = mode === "qa" ? r[1] : r[0];
+  const aText = mode === "i" ? r[0].zh : aRec.id, aFile = mode === "i" ? r[0].za : aRec.a, aLang = mode === "i" ? "zh-CN" : "id-ID";
+  const lab = { qa: "听考官提问，用印尼语回答", z: "听中文，说出印尼语", i: "听印尼语，说出中文", r: "听印尼语，跟着说一遍" }[mode];
+  let txt = "", shown = false;
+  $("#app").innerHTML = `${head}
+  <div class="card glass">
+    <div class="prog"><span>${i + 1} / ${FQ.length}</span><div class="bar"><i style="width:${i / FQ.length * 100}%"></i></div>${it.early ? '<span class="tag">提前练</span>' : ""}</div>
+    <div class="stage"><button class="play" id="fpl" type="button" aria-label="听">${IC.play}</button><div class="lab">${lab}</div>
+      <button class="hintbtn" id="fsh" type="button">没听清？看文字</button><div id="frv"></div>
+      ${SR ? `<button class="mic" id="fmc" type="button" aria-label="开始说">${IC.mic}</button>` : ""}<div class="lab" id="fml">${SR ? "点一下话筒，等它变红再开口" : "这个浏览器不能识别语音，直接大声说出来就行"}</div></div>
+    <div class="said" id="fsd"><span class="ph">${SR ? "识别出的文字会显示在这里" : "说完后点「看答案」，自己对一对"}</span></div>
+    <div class="row2" style="justify-content:center;margin-top:14px"><button class="btn ghost" id="fans" type="button">看答案</button></div>
+    <div id="fres"></div>
+  </div>`;
+  const mc = $("#fmc");
+  function listenFav() {
+    if (!SR || !mc) return;
+    if (rec) return stopRec();
+    stopAudio(); txt = "";
+    let fin = "", im = "", err = "", live = false;
+    const r2 = rec = new SR(); r2.lang = lang; r2.continuous = false; r2.interimResults = true; r2.maxAlternatives = 1;
+    mc.classList.add("wait"); mc.innerHTML = IC.stop; $("#fml").textContent = "准备中……（先别说，等话筒变红）";
+    const go = () => { if (live || rec !== r2) return; live = true; mc.classList.remove("wait"); mc.classList.add("on"); $("#fml").textContent = "请说！说完会自动停"; };
+    r2.onaudiostart = go; r2.onspeechstart = go; r2.onstart = () => setTimeout(go, 700);
+    r2.onresult = e => {
+      im = "";
+      for (let k = e.resultIndex; k < e.results.length; k++) { const x = e.results[k]; if (x.isFinal) fin = (fin + " " + x[0].transcript).trim(); else im += x[0].transcript; }
+      go(); $("#fsd").innerHTML = `${esc(fin)} <span class="im">${esc(im)}</span>`;
+    };
+    r2.onerror = e => { err = e.error; };
+    r2.onend = () => {
+      if (rec !== r2) return; rec = null; mc.classList.remove("on", "wait"); mc.innerHTML = IC.mic;
+      const got = (fin || im).trim(); if (got) txt = got;
+      $("#fsd").innerHTML = txt ? esc(txt) : `<span class="ph">识别出的文字会显示在这里</span>`;
+      $("#fml").textContent = got ? "说错了就再点一下话筒重说" : ({ "not-allowed": "麦克风没有权限：请在浏览器设置里允许使用麦克风", "no-speech": "没听到声音。靠近一点，等话筒变红再说", "network": "语音识别要联网，再点一次", "language-not-supported": "这台设备没有这个语言的听写，直接说出来、点「看答案」自己对" }[err] || "没识别出来，再试一次，或者直接点「看答案」");
+    };
+    try { r2.start(); } catch (e) { rec = null; mc.classList.remove("wait"); mc.innerHTML = IC.mic; }
+  }
+  $("#fpl").onclick = () => playFav(pFile, pText, pLang, $("#fpl"));
+  if (mc) mc.onclick = () => { if (rec) return stopRec(); stopAudio(); setTimeout(listenFav, 150); };
+  $("#fsh").onclick = () => { shown = !shown; $("#frv").innerHTML = shown ? `<div class="reveal">${esc(pText)}</div>` : ""; $("#fsh").textContent = shown ? "收起文字" : "没听清？看文字"; };
+  $("#fans").onclick = () => {
+    stopRec();
+    const sim = (mode === "z" || mode === "r") && txt ? favSim(txt, aText) : "";
+    $("#fres").innerHTML = `<div class="reveal">${mode === "qa" ? "参考回答：" : ""}${esc(aText)}${r.length === 1 && mode !== "i" && r[0].zh ? `<div class="sub" style="margin-top:6px">${esc(r[0].zh)}</div>` : ""}</div>
+      <div style="text-align:center;margin-top:8px"><button class="sbtn" id="fpa" type="button">${IC.play}听标准音</button>${sim ? `<span class="sub" style="margin-left:8px">${sim}</span>` : ""}</div>
+      <div class="row2" style="justify-content:center;gap:12px;margin-top:14px"><button class="btn no" id="fno" type="button">还不会</button><button class="btn okb" id="fok" type="button">会了</button></div>`;
+    $("#fans").hidden = true;
+    $("#fpa").onclick = () => playFav(aFile, aText, aLang, $("#fpa"));
+    const next = ok => { stopRec(); stopAudio(); gradeFav(it.k, ok); if (ok) FS.ok++; else { FS.no++; FQ.push({ k: it.k, rec: it.rec, early: false }); } location.hash = "#fav/" + (i + 1); };
+    $("#fno").onclick = () => next(false); $("#fok").onclick = () => next(true);
+    setTimeout(() => playFav(aFile, aText, aLang, $("#fpa")), 150);          // 揭晓时自动放一遍标准音
+  };
+  setTimeout(() => { if ($("#fpl")) playFav(pFile, pText, pLang, $("#fpl")); }, 250);
+}
+
 // ---------- 页面
 function route() {
   stopAudio(); stopRec();
   const h = (location.hash || "#").slice(1).split("/");
+  if (h[0] === "fav") return favPage(h[1] === undefined ? -1 : +h[1]);
   if (h[0] === "do") return doPage(h[1], +(h[2] || 0));
   if (h[0] === "review") return h[1] ? reviewDay(h[1]) : reviewList();
   if (h[0] === "sent") return sentPage();
@@ -317,7 +441,7 @@ function home() {
   $("#app").innerHTML = `<div class="top"><div><h1>口语练习</h1><p class="sub">全程听和说，做完以后在「复盘」看文字和批改</p></div>${tabs("home")}</div>
   ${loginCard()}
   ${SR ? "" : `<div class="card glass note">这个浏览器不能语音识别。iPad 请用 <b>Safari</b>，安卓请用 <b>Chrome</b>。也可以点「打字」，用键盘上的麦克风说。</div>`}
-  <div class="tasks">${card("qa")}${card("z")}${card("i")}</div>
+  <div class="tasks">${card("qa")}${card("z")}${card("i")}${favCard()}</div>
   <div class="row2"><button class="btn ghost" type="button" id="more">再来 10 道问答新题</button></div>
   ${all ? `<div class="card glass note">今天的都做完了 ✓ 批改好以后会出现在「复盘」里。</div>` : ""}`;
   bindLogin();
