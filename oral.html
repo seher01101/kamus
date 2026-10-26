@@ -182,7 +182,9 @@ const today = () => { const d = new Date(); return d.getFullYear() + "-" + Strin
 
 function merge(a, b) {
   if (!b) return a;
-  const out = { ans: {}, fs: { ...(b.fs || {}), ...(a.fs || {}) } };
+  const out = { ans: {}, fs: { ...(b.fs || {}), ...(a.fs || {}) }, more: {} };
+  for (const d of new Set([...Object.keys(a.more || {}), ...Object.keys(b.more || {})]))   // 「再来 10 道」加的题：两边合起来
+    out.more[d] = [...new Set([...((b.more || {})[d] || []), ...((a.more || {})[d] || [])])];
   for (const d of new Set([...Object.keys(a.ans || {}), ...Object.keys(b.ans || {})])) {
     const x = (a.ans || {})[d] || {}, y = (b.ans || {})[d] || {}, m = {};
     for (const id of new Set([...Object.keys(x), ...Object.keys(y)])) m[id] = !y[id] || (x[id] && x[id].ts >= y[id].ts) ? x[id] : y[id];
@@ -192,10 +194,12 @@ function merge(a, b) {
 }
 function save() { wr(SK, S); KSync.later("oral", syncUp, () => S); }
 async function syncUp() { try { const r = await KSync.pull("oral"); S = merge(S, r); wr(SK, S); await KSync.push("oral", S); } catch (e) {} }
+let ready = !KSync.user();                                   // 登录了就先等云端拉完再出题，免得拿旧数据出一套不一样的题
 async function pullAll() {
-  if (!KSync.user()) return;
+  if (!KSync.user()) { ready = true; return; }
   try { const r = await KSync.pull("oral"); S = merge(S, r); wr(SK, S); } catch (e) {}
   try { const k = await KSync.pull("oralk"); if (k) { K = k; wr(KK, K); } } catch (e) {}
+  ready = true;
   route();
 }
 
@@ -242,11 +246,18 @@ function compute(d) {
   }
   return out;
 }
+// 当天题单：cc 排好的优先（每台设备都一样）；没排就按规则出一套存起来。
+// 再补上「再来 10 道」加的题，和别的设备上答过、但不在单子里的题——答过的题一定看得到
 function daySet(d) {
-  const ks = K.sets && K.sets[d], started = Object.keys(S.ans[d] || {}).length;
-  if (ks && !started && JSON.stringify(S.fs[d]) !== JSON.stringify(ks)) { S.fs[d] = JSON.parse(JSON.stringify(ks)); save(); }   // cc 排的题优先（还没开始答的话）
-  if (!S.fs[d]) { S.fs[d] = compute(d); save(); }
-  return S.fs[d];
+  const ks = K.sets && K.sets[d];
+  if (!ks && !S.fs[d]) { S.fs[d] = compute(d); save(); }
+  const s = JSON.parse(JSON.stringify(ks || S.fs[d]));
+  s.qa = [...new Set([...s.qa, ...((S.more || {})[d] || [])])];
+  for (const key of Object.keys(S.ans[d] || {})) {
+    const sec = key[0] === "q" ? "qa" : key.slice(-1), id = sec === "qa" ? key : key.slice(0, -1);
+    if (s[sec] && !s[sec].includes(id)) s[sec].push(id);
+  }
+  return s;
 }
 const itemId = (sec, id) => sec === "qa" ? id : id + sec;
 const ansOf = (d, sec, id) => ((S.ans[d] || {})[itemId(sec, id)] || {}).t || "";
@@ -406,6 +417,7 @@ function favPage(i) {
 function route() {
   stopAudio(); stopRec();
   const h = (location.hash || "#").slice(1).split("/");
+  if (!ready && (h[0] === "" || h[0] === "do")) { $("#app").innerHTML = '<p class="empty">正在同步云端的题和答案……</p>'; return; }
   if (h[0] === "fav") return favPage(h[1] === undefined ? -1 : +h[1]);
   if (h[0] === "do") return doPage(h[1], +(h[2] || 0));
   if (h[0] === "review") return h[1] ? reviewDay(h[1]) : reviewList();
@@ -447,8 +459,8 @@ function home() {
   bindLogin();
   $("#more").onclick = () => {
     const s = daySet(d), add = freshQA(d + "+" + s.qa.length, 10, new Set(s.qa));
-    s.qa = s.qa.concat(add); save();
-    location.hash = "#do/qa/" + (s.qa.length - add.length);
+    S.more = S.more || {}; S.more[d] = [...((S.more[d]) || []), ...add]; save();
+    location.hash = "#do/qa/" + s.qa.length;
   };
 }
 
@@ -577,8 +589,9 @@ const POS = new Set("n vt vi v adj adv prep num conj pron part int aux art".spli
 const lk = h => h.replace(/(<[^>]+>)|([A-Za-z][A-Za-z]*(?:-[A-Za-z]+)*)/g, (m, tag, w) => tag || (w.length < 2 || POS.has(w.toLowerCase()) ? m : `<a class="w" href="dict.html#${encodeURIComponent(w.toLowerCase())}">${w}</a>`));
 function reviewDay(d) {
   const C = (K.corr || {})[d] || {}, A = S.ans[d] || {}, ck = Object.keys(C);
-  const set = S.fs[d] || (K.sets || {})[d] || {                // 没在网页上做过的那天（比如用 Excel 做的）：按批改里的题列出
-    qa: ck.filter(k => k[0] === "q"), z: ck.filter(k => /^t.*z$/.test(k)).map(k => k.slice(0, -1)), i: ck.filter(k => /^t.*i$/.test(k)).map(k => k.slice(0, -1)) };
+  const set = { qa: [], z: [], i: [] };                       // 按实际答过的顺序列；再补批改里有的（比如 Excel 做的那天）
+  const keys = [...Object.keys(A).sort((x, y) => (A[x].ts || 0) - (A[y].ts || 0)), ...ck];
+  for (const key of keys) { const sec = key[0] === "q" ? "qa" : key.slice(-1), id = sec === "qa" ? key : key.slice(0, -1); if (set[sec] && !set[sec].includes(id)) set[sec].push(id); }
   const GN = { A: "全对", B: "小错", C: "再练" };
   const item = (sec, id, k) => {
     const key = itemId(sec, id), a = A[key], c = C[key];
