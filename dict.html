@@ -126,6 +126,9 @@ mark{background:var(--hl);color:inherit;border-radius:4px;padding:0 2px}
 .more{font:inherit;font-size:13px;font-weight:500;color:var(--accent);background:none;border:0;padding:8px 2px 0;cursor:pointer;justify-self:start}
 .empty{margin:4px;color:var(--muted)}
 .srcs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;font-size:11.5px;color:var(--muted);align-items:center}
+.ext{display:flex;gap:12px;margin-top:8px;font-size:12px}
+.ext a{color:var(--muted);text-decoration:none}
+.ext a:hover{color:var(--accent)}
 .srcs span{background:color-mix(in srgb,var(--surface-2) 70%,transparent);border-radius:6px;padding:0 7px;color:var(--ink-soft)}
 .srcf{margin-top:6px}
 .az button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
@@ -273,6 +276,7 @@ function say(text) {
   speechSynthesis.speak(u);
 }
 
+const extLinks = w => `<div class="ext"><a href="https://kbbi.kemdikbud.go.id/entri/${encodeURIComponent(w)}" target="_blank" rel="noopener">到 KBBI 查 ↗</a><a href="https://id.wiktionary.org/wiki/${encodeURIComponent(w)}" target="_blank" rel="noopener">维基词典 ↗</a></div>`;
 function entryHTML(e, hitWord) {
   const tag = e.type === "phrase" ? '<span class="tag">词组</span>'
     : e.type === "affix" ? '<span class="tag">' + esc(e.m) + '</span>'
@@ -293,7 +297,7 @@ function entryHTML(e, hitWord) {
   const n = canFav ? KFav.count(e.key) : 0;
   const star = canFav ? `<button class="star${n >= 3 ? " nudge" : ""}" type="button" data-fav="${esc(e.key)}" aria-pressed="${KFav.isFav(e.key)}" aria-label="收藏">${STAR}</button>` : "";
   const looked = canFav ? `<span class="looked" data-lc="${esc(e.key)}"${n ? "" : " hidden"}>查过 ${n} 次</span>` : "";
-  return `<article class="entry" id="e${e.i}"><div class="head"><span class="hw">${esc(e.w)}</span>${e.ipa ? `<span class="ipa">[${esc(e.ipa)}]</span>` : ""}${sayBtn}${star}${tag}${looked}${freq}</div>${body}${srcs}${phr}${ex}</article>`;
+  return `<article class="entry" id="e${e.i}"><div class="head"><span class="hw">${esc(e.w)}</span>${e.ipa ? `<span class="ipa">[${esc(e.ipa)}]</span>` : ""}${sayBtn}${star}${tag}${looked}${freq}</div>${body}${srcs}${phr}${ex}${canFav ? extLinks(e.w) : ""}</article>`;
 }
 
 const POSN = { 名: "名词", 动: "动词", 形: "形容词", 副: "副词", 代: "代词", 数: "数词", 量: "量词", 介: "介词", 连: "连词", 叹: "叹词", 助: "助词", 疑: "疑问词" };
@@ -339,7 +343,7 @@ function render(keepLimit) {
       if (roots.length) rows = roots.map(r => byKey.get(r));
       list.innerHTML = rows.length
         ? `<p class="empty">词典里没有 <b>${esc(q.value)}</b> 这个形式，它可能是下面这个词加了前后缀：</p>` + rows.map(e => entryHTML(e)).join("")
-        : `<p class="empty">没有找到 <b>${esc(q.value)}</b>。试试少打几个字母，或者直接输入中文意思。</p>`;
+        : `<p class="empty">没有找到 <b>${esc(q.value)}</b>。试试少打几个字母，或者直接输入中文意思。</p>` + extLinks(q.value.trim());
       $("#count").textContent = rows.length ? "可能的词根" : "0 条";
       return;
     }
