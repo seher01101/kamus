@@ -218,7 +218,7 @@ function freshQA(d, n, skip) {
     .sort((a, b) => a.src - b.src || b.zt - a.zt || hashStr(a.id + d) - hashStr(b.id + d)).slice(0, n).map(x => x.id);
 }
 // 考前（EXAM 前一天为止）：原题/真题平均分到每一天，保证考前全部过一遍；复习、课本例句只占剩下的位置
-const EXAM = "2026-10-29";
+const EXAM = "2026-10-28";
 const daysLeft = d => Math.max(0, Math.round((new Date(EXAM) - new Date(d)) / 864e5));
 function compute(d) {
   const P = K.prog || {}, done = answered(), left = daysLeft(d);
