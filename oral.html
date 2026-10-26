@@ -178,7 +178,9 @@ const rd = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } 
 const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 let S = rd(SK) || { ans: {}, fs: {} };
 let K = rd(KK) || { sets: {}, prog: {}, corr: {}, common: {}, sent: [] };
-const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+// 网址带 ?d=2026-10-27 就提前做那一天的题（答案也记在那一天）
+const DOV = (new URLSearchParams(location.search).get("d") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? new URLSearchParams(location.search).get("d") : "";
+const today = () => { if (DOV) return DOV; const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 
 function merge(a, b) {
   if (!b) return a;
@@ -450,7 +452,7 @@ function home() {
       <span class="go">${done ? "✓ " + c + "/" + n : c ? "继续 " + c + "/" + n : "开始 ›"}</span></a>`;
   };
   const all = ["qa", "z", "i"].every(s => count(d, s) >= set[s].length);
-  $("#app").innerHTML = `<div class="top"><div><h1>口语练习</h1><p class="sub">全程听和说，做完以后在「复盘」看文字和批改</p></div>${tabs("home")}</div>
+  $("#app").innerHTML = `<div class="top"><div><h1>口语练习</h1><p class="sub">${DOV ? `正在提前做 <b>${DOV}</b> 的题 · <a href="oral.html">回到今天</a>` : "全程听和说，做完以后在「复盘」看文字和批改"}</p></div>${tabs("home")}</div>
   ${loginCard()}
   ${SR ? "" : `<div class="card glass note">这个浏览器不能语音识别。iPad 请用 <b>Safari</b>，安卓请用 <b>Chrome</b>。也可以点「打字」，用键盘上的麦克风说。</div>`}
   <div class="tasks">${card("qa")}${card("z")}${card("i")}${favCard()}</div>
