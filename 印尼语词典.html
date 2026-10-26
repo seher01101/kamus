@@ -276,7 +276,7 @@ function say(text) {
   speechSynthesis.speak(u);
 }
 
-const extLinks = w => `<div class="ext"><a href="https://kbbi.kemdikbud.go.id/entri/${encodeURIComponent(w)}" target="_blank" rel="noopener">到 KBBI 查 ↗</a><a href="https://id.wiktionary.org/wiki/${encodeURIComponent(w)}" target="_blank" rel="noopener">维基词典 ↗</a></div>`;
+const extLinks = w => `<div class="ext"><a href="https://kbbi.kemendikdasmen.go.id/entri/${encodeURIComponent(w)}" target="_blank" rel="noopener">到 KBBI 查 ↗</a><a href="https://id.wiktionary.org/wiki/${encodeURIComponent(w)}" target="_blank" rel="noopener">维基词典 ↗</a></div>`;
 function entryHTML(e, hitWord) {
   const tag = e.type === "phrase" ? '<span class="tag">词组</span>'
     : e.type === "affix" ? '<span class="tag">' + esc(e.m) + '</span>'
