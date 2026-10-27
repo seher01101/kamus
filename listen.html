@@ -493,7 +493,7 @@ const MODES = {
 let mode = MODES[store.mode] ? store.mode : "seq";
 
 function wordLinks(t) {
-  return esc(t).replace(/[A-Za-z]+(?:-[A-Za-z]+)*/g, w => `<a href="dict.html#${w.toLowerCase()}" target="_blank" rel="noopener">${w}</a>`);
+  return String(t).replace(/([A-Za-z]+(?:-[A-Za-z]+)*)|([^A-Za-z]+)/g, (m, w, o) => w ? `<a href="dict.html#${w.toLowerCase()}" target="_blank" rel="noopener">${w}</a>` : esc(o));
 }
 function lineHTML(l, k) {
   const spCls = l.role === "q" ? "q" : l.role === "a" ? "a" : "";

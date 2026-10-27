@@ -248,7 +248,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 
 // wrap each Indonesian word so it can be clicked to look up
 function linkify(text, hit) {
-  return esc(text).replace(/[A-Za-z]+(?:-[A-Za-z]+)*/g, w => {
+  return String(text).replace(/([A-Za-z]+(?:-[A-Za-z]+)*)|([^A-Za-z]+)/g, (m, w, o) => {
+    if (!w) return esc(o);
     const k = w.toLowerCase();
     const inner = hit && k === hit ? `<mark>${w}</mark>` : w;
     return byKey.has(k) ? `<span class="w" tabindex="0" data-look="${k}">${inner}</span>` : inner;

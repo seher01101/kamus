@@ -589,7 +589,7 @@ function reviewList() {
 const rich = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 const POS = new Set("n vt vi v adj adv prep num conj pron part int aux art".split(" "));
 // 把文字里的印尼语单词变成指向词典的链接（只处理标签之外的字母串）
-const lk = h => h.replace(/(<[^>]+>)|([A-Za-z][A-Za-z]*(?:-[A-Za-z]+)*)/g, (m, tag, w) => tag || (w.length < 2 || POS.has(w.toLowerCase()) ? m : `<a class="w" href="dict.html#${encodeURIComponent(w.toLowerCase())}">${w}</a>`));
+const lk = h => h.replace(/(<[^>]+>|&[a-z]+;|&#\d+;)|([A-Za-z][A-Za-z]*(?:-[A-Za-z]+)*)/g, (m, tag, w) => tag || (w.length < 2 || POS.has(w.toLowerCase()) ? m : `<a class="w" href="dict.html#${encodeURIComponent(w.toLowerCase())}">${w}</a>`));
 function reviewDay(d) {
   const C = (K.corr || {})[d] || {}, A = S.ans[d] || {}, ck = Object.keys(C);
   const set = { qa: [], z: [], i: [] };                       // 按实际答过的顺序列；再补批改里有的（比如 Excel 做的那天）
