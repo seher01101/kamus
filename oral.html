@@ -225,7 +225,7 @@ function freshQA(d, n, skip) {
   return DQ.filter(x => !P[x.id] && !done.has(x.id) && !skip.has(x.id))
     .sort((a, b) => a.src - b.src || b.zt - a.zt || hashStr(a.id + d) - hashStr(b.id + d)).slice(0, n).map(x => x.id);
 }
-// 考前（EXAM 前一天为止）：原题/真题平均分到每一天，保证考前全部过一遍；复习、课本例句只占剩下的位置
+// 考前（EXAM 前一天为止）：精选/模拟平均分到每一天，保证考前全部过一遍；复习、课本例句只占剩下的位置
 const EXAM = LV === 2 ? "2026-11-25" : "2026-10-28";   // 二级考试大概 11-25（还没定）
 const daysLeft = d => Math.max(0, Math.round((new Date(EXAM) - new Date(d)) / 864e5));
 function compute(d) {
@@ -609,7 +609,7 @@ function reviewDay(d) {
   const item = (sec, id, k) => {
     const key = itemId(sec, id), a = A[key], c = C[key];
     const fixLang = sec === "i" ? "zh-CN" : "id-ID";
-    return `<div class="it glass"><div class="q"><span class="n">${k + 1}</span><button class="sp" type="button" data-p="${sec}|${id}" aria-label="听原题">${IC.play}</button><span>${lk(esc(textOf(sec, id)))}${c && c.g ? `<span class="g ${c.g}">${GN[c.g]}</span>` : ""}</span></div>
+    return `<div class="it glass"><div class="q"><span class="n">${k + 1}</span><button class="sp" type="button" data-p="${sec}|${id}" aria-label="听题目">${IC.play}</button><span>${lk(esc(textOf(sec, id)))}${c && c.g ? `<span class="g ${c.g}">${GN[c.g]}</span>` : ""}</span></div>
       <div class="kv"><span class="k">你说的</span>${a ? esc(a.t) + (a.pk ? ' <small class="sub">（看过文字）</small>' : "") : c && c.ans ? esc(c.ans) : '<span class="sub">没答</span>'}</div>
       ${c ? `<div class="kv"><span class="k">改好的</span><span class="fix">${lk(rich(c.fix))}</span> <button class="sp" style="display:inline-grid;vertical-align:middle" type="button" data-t="${esc(c.fix.replace(/\*\*/g, ""))}" data-l="${fixLang}" aria-label="读改好的句子">${IC.play}</button></div>
         ${c.note ? `<div class="kv"><span class="k">改了什么</span>${lk(esc(c.note))}</div>` : ""}${c.words ? `<div class="kv"><span class="k">生词</span>${lk(esc(c.words))}</div>` : ""}${c.pat ? `<div class="kv"><span class="k">句型</span>${lk(esc(c.pat))}</div>` : ""}${c.up ? `<div class="kv"><span class="k">升级版</span>${lk(esc(c.up))}</div>` : ""}${c.ext ? `<div class="kv"><span class="k">扩充</span>${lk(esc(c.ext))}</div>` : ""}` : ""}
